@@ -524,14 +524,7 @@ html, body {
 .prompt-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.prompt-prefix {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  font-weight: 800;
-  color: #ffffff;
+  width: 100%;
 }
 
 .formula-input {
@@ -540,11 +533,12 @@ html, body {
   border: none;
   outline: none;
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
   color: var(--text-primary);
   user-select: text;
   width: 100%;
+  padding: 2px 0;
 }
 
 .formula-input::placeholder {

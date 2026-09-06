@@ -22,6 +22,9 @@
         <button id="openHelpBtn" class="icon-btn" title="使い方" aria-label="Help">
           <span style="font-weight: 700; font-size: 15px;">?</span>
         </button>
+        <button id="exportCsvBtn" class="icon-btn" title="CSV書き出し" aria-label="Export CSV">
+          <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700;">CSV</span>
+        </button>
         <button id="toggleKeyboardModeBtn" class="icon-btn" title="スマホキーボード表示切替" aria-label="Toggle OS Keyboard">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="4" width="20" height="16" rx="3"></rect>
@@ -65,7 +68,6 @@
     <!-- Input & Real-time Preview Bar -->
     <section class="input-section">
       <div class="prompt-row">
-        <span class="prompt-prefix">&gt;</span>
         <input 
           type="text" 
           id="formulaInput" 

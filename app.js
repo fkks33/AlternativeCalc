@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleKeypadBtn = document.getElementById('toggleKeypadBtn');
   const toggleKeyboardModeBtn = document.getElementById('toggleKeyboardModeBtn');
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  const exportCsvBtn = document.getElementById('exportCsvBtn');
   const openHelpBtn = document.getElementById('openHelpBtn');
   const toastNotice = document.getElementById('toastNotice');
   const tabsContainer = document.getElementById('tabsContainer');
@@ -56,6 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedLogItem = null;
   let selectedLogIndex = -1;
   let isOSKeyboardEnabled = false;
+
+  // Caret tracking for robust cursor restoration on mobile/Android
+  let lastSelectionStart = 0;
+  let lastSelectionEnd = 0;
 
   // Haptic feedback
   const haptic = () => {
@@ -368,67 +373,113 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const updateCaretPosition = () => {
+    if (document.activeElement === formulaInput) {
+      lastSelectionStart = formulaInput.selectionStart ?? formulaInput.value.length;
+      lastSelectionEnd = formulaInput.selectionEnd ?? formulaInput.value.length;
+    }
+  };
+
   formulaInput.addEventListener('input', () => {
+    updateCaretPosition();
     updateLivePreview();
+  });
+  formulaInput.addEventListener('click', updateCaretPosition);
+  formulaInput.addEventListener('keyup', updateCaretPosition);
+  formulaInput.addEventListener('select', updateCaretPosition);
+  formulaInput.addEventListener('pointerup', updateCaretPosition);
+  document.addEventListener('selectionchange', () => {
+    if (document.activeElement === formulaInput) {
+      updateCaretPosition();
+    }
+  });
+
+  // Prevent tapping variable chips from stealing focus or dropping caret to 0 on Android
+  varChipsContainer.addEventListener('pointerdown', (e) => {
+    if (!e.target.classList.contains('var-del-btn')) {
+      e.preventDefault();
+    }
   });
 
   const insertTextAtCursor = (text) => {
     haptic();
-    const start = formulaInput.selectionStart ?? formulaInput.value.length;
-    const end = formulaInput.selectionEnd ?? formulaInput.value.length;
     const current = formulaInput.value;
+
+    // Use active caret if input is focused, otherwise use last tracked position
+    let start = (document.activeElement === formulaInput)
+      ? (formulaInput.selectionStart ?? lastSelectionStart)
+      : lastSelectionStart;
+    let end = (document.activeElement === formulaInput)
+      ? (formulaInput.selectionEnd ?? lastSelectionEnd)
+      : lastSelectionEnd;
+
+    // Clamp within string bounds
+    if (typeof start !== 'number' || isNaN(start)) start = current.length;
+    if (typeof end !== 'number' || isNaN(end)) end = current.length;
+    start = Math.max(0, Math.min(start, current.length));
+    end = Math.max(0, Math.min(end, current.length));
 
     formulaInput.value = current.substring(0, start) + text + current.substring(end);
     const newPos = start + text.length;
 
+    lastSelectionStart = newPos;
+    lastSelectionEnd = newPos;
+
+    // Focus with preventScroll to ensure selectionRange is maintained without OS keyboard
+    formulaInput.focus({ preventScroll: true });
     formulaInput.setSelectionRange(newPos, newPos);
 
-    if (isOSKeyboardEnabled) {
-      formulaInput.focus();
-    }
     updateLivePreview();
   };
 
   // Smart Parentheses: insert "()" only at the end of input
   const handleOpenParen = () => {
     haptic();
-    const start = formulaInput.selectionStart ?? formulaInput.value.length;
-    const end = formulaInput.selectionEnd ?? formulaInput.value.length;
     const current = formulaInput.value;
+    let start = (document.activeElement === formulaInput)
+      ? (formulaInput.selectionStart ?? lastSelectionStart)
+      : lastSelectionStart;
+    let end = (document.activeElement === formulaInput)
+      ? (formulaInput.selectionEnd ?? lastSelectionEnd)
+      : lastSelectionEnd;
 
     if (start === end && start === current.length) {
       formulaInput.value = current + '()';
       const newPos = start + 1;
+      lastSelectionStart = newPos;
+      lastSelectionEnd = newPos;
+      formulaInput.focus({ preventScroll: true });
       formulaInput.setSelectionRange(newPos, newPos);
     } else {
       insertTextAtCursor('(');
       return;
     }
 
-    if (isOSKeyboardEnabled) {
-      formulaInput.focus();
-    }
     updateLivePreview();
   };
 
   const handleSqrt = () => {
     haptic();
-    const start = formulaInput.selectionStart ?? formulaInput.value.length;
-    const end = formulaInput.selectionEnd ?? formulaInput.value.length;
     const current = formulaInput.value;
+    let start = (document.activeElement === formulaInput)
+      ? (formulaInput.selectionStart ?? lastSelectionStart)
+      : lastSelectionStart;
+    let end = (document.activeElement === formulaInput)
+      ? (formulaInput.selectionEnd ?? lastSelectionEnd)
+      : lastSelectionEnd;
 
     if (start === end && start === current.length) {
       formulaInput.value = current + 'sqrt()';
       const newPos = start + 5;
+      lastSelectionStart = newPos;
+      lastSelectionEnd = newPos;
+      formulaInput.focus({ preventScroll: true });
       formulaInput.setSelectionRange(newPos, newPos);
     } else {
       insertTextAtCursor('sqrt(');
       return;
     }
 
-    if (isOSKeyboardEnabled) {
-      formulaInput.focus();
-    }
     updateLivePreview();
   };
 
@@ -797,6 +848,39 @@ document.addEventListener('DOMContentLoaded', () => {
       renderHistory();
       showToast('履歴を消去しました');
     }
+  });
+
+  exportCsvBtn.addEventListener('click', () => {
+    haptic();
+    const active = getActiveSession();
+    if (!active || active.historyLogs.length === 0) {
+      showToast('書き出す履歴がありません');
+      return;
+    }
+
+    const rows = [
+      ['日時', '式', '結果', '種別']
+    ];
+
+    active.historyLogs.forEach(item => {
+      const dateStr = item.time ? new Date(item.time).toLocaleString('ja-JP') : '';
+      const typeStr = item.isAssignment ? '変数定義' : (item.isError ? 'エラー' : '計算');
+      rows.push([dateStr, item.expr, String(item.result), typeStr]);
+    });
+
+    const csvString = '\uFEFF' + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = (active.name || 'session').replace(/[\\/:*?"<>|]/g, '_');
+    a.download = `VarCalc_${safeName}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('CSVを書き出しました');
   });
 
   // --------------------------------------------------------------------------
