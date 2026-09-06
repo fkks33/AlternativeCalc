@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const logArea = document.getElementById('logArea');
   const varChipsContainer = document.getElementById('varChipsContainer');
   const keypadSection = document.getElementById('keypadSection');
+  const toggleKeypadBtn = document.getElementById('toggleKeypadBtn');
   const toggleKeyboardModeBtn = document.getElementById('toggleKeyboardModeBtn');
   const exportCsvBtn = document.getElementById('exportCsvBtn');
   const openHelpBtn = document.getElementById('openHelpBtn');
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const historyActionModal = document.getElementById('historyActionModal');
   const actionModalExpr = document.getElementById('actionModalExpr');
+  const actionSaveAsVar = document.getElementById('actionSaveAsVar');
   const actionBranchOut = document.getElementById('actionBranchOut');
   const actionReuseExpr = document.getElementById('actionReuseExpr');
   const actionInsertResult = document.getElementById('actionInsertResult');
@@ -633,6 +635,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
+  // Toggle Keypad Display Button
+  // --------------------------------------------------------------------------
+  toggleKeypadBtn.addEventListener('click', () => {
+    haptic();
+    const isCollapsed = keypadSection.classList.toggle('collapsed');
+    toggleKeypadBtn.style.opacity = isCollapsed ? '0.4' : '1';
+    showToast(isCollapsed ? 'キーパッドを非表示にしました' : 'キーパッドを表示しました');
+  });
+
+  // --------------------------------------------------------------------------
   // Toggle OS Mobile Keyboard Button
   // --------------------------------------------------------------------------
   toggleKeyboardModeBtn.addEventListener('click', () => {
@@ -702,6 +714,19 @@ document.addEventListener('DOMContentLoaded', () => {
       : `${item.expr} = ${MathParser.formatNumber(item.result)}`;
     historyActionModal.classList.add('open');
   };
+
+  // Save Result as Variable (計算結果を変数として保存)
+  actionSaveAsVar.addEventListener('click', () => {
+    if (selectedLogItem && !selectedLogItem.isError) {
+      haptic();
+      const resVal = String(selectedLogItem.result);
+      closeModals();
+      varNameInput.value = '';
+      varValueInput.value = resVal;
+      addVarModal.classList.add('open');
+      setTimeout(() => varNameInput.focus(), 60);
+    }
+  });
 
   // Branch Out (枝分かれ)
   actionBranchOut.addEventListener('click', () => {
@@ -812,6 +837,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       alert(`エラー: ${err.message}`);
     }
+  });
+
+  [varNameInput, varValueInput].forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveVarBtn.click();
+      }
+    });
   });
 
   const closeModals = () => {

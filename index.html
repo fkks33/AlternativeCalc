@@ -25,8 +25,17 @@
         <h1 class="app-title">AlternativeCalc</h1>
       </div>
       <div class="header-actions">
-        <button id="openHelpBtn" class="icon-btn" title="使い方" aria-label="Help">
-          <span style="font-weight: 700; font-size: 15px;">?</span>
+        <button id="toggleKeypadBtn" class="icon-btn" title="キーパッド表示切替" aria-label="Toggle Keypad">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="2" width="16" height="20" rx="3"></rect>
+            <line x1="8" y1="6" x2="16" y2="6"></line>
+            <line x1="8" y1="10" x2="10" y2="10"></line>
+            <line x1="14" y1="10" x2="16" y2="10"></line>
+            <line x1="8" y1="14" x2="10" y2="14"></line>
+            <line x1="14" y1="14" x2="16" y2="14"></line>
+            <line x1="8" y1="18" x2="10" y2="18"></line>
+            <line x1="14" y1="18" x2="16" y2="18"></line>
+          </svg>
         </button>
         <button id="exportCsvBtn" class="icon-btn" title="CSVダウンロード" aria-label="Download CSV">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -40,6 +49,9 @@
             <rect x="2" y="4" width="20" height="16" rx="3"></rect>
             <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"></path>
           </svg>
+        </button>
+        <button id="openHelpBtn" class="icon-btn" title="使い方" aria-label="Help">
+          <span style="font-weight: 700; font-size: 15px;">?</span>
         </button>
       </div>
     </header>
@@ -148,6 +160,10 @@
       <div class="modal-card">
         <h2 class="modal-title" id="actionModalExpr">計算ログ</h2>
         <div class="action-sheet-menu">
+          <button class="action-menu-btn" id="actionSaveAsVar">
+            <span>変数として保存</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          </button>
           <button class="action-menu-btn" id="actionBranchOut">
             <span>枝分かれ (新タブ作成)</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
@@ -178,56 +194,59 @@
         <div class="help-content" style="font-size: 13px; line-height: 1.8; color: var(--text-secondary);">
           <p><strong>■ 基本的な計算</strong></p>
           <ul style="padding-left: 18px; margin-bottom: 14px;">
-            <li>四則演算（<code>+</code>, <code>−</code>, <code>×</code>, <code>÷</code>）、括弧 <code>()</code>、小数点 <code>.</code>、べき乗 <code>xʸ</code>、平方根 <code>√</code> に完全対応している。</li>
-            <li>例: <code>1122 * (4.75 + 4570) + 2500 + 2500</code></li>
-            <li>数式を入力している途中で、文法が成立した時点で入力欄下部に薄くリアルタイムプレビューが表示される。</li>
-            <li>キーパッドの <code>=</code> または物理キーボードの <code>Enter</code> を押すことで計算が確定し、上部に計算ログとして蓄積される。</li>
-            <li>JavaScript特有の浮動小数点丸め誤差（例: <code>0.1 + 0.2 = 0.30000000000000004</code>）は内部で自動補正され、正確な十進数で評価される。</li>
+            <li>普通の電卓と同じように計算式をそのまま入力できる。四則演算（<code>+</code>, <code>−</code>, <code>×</code>, <code>÷</code>）、括弧 <code>()</code>、小数点 <code>.</code>、べき乗 <code>xʸ</code>、ルート <code>√</code> が使える。</li>
+            <li>例: <code>1122 * (4.75 + 4570) + 2500</code></li>
+            <li>数式を入力していくと、入力欄の下にリアルタイムで計算結果のプレビューが表示される。</li>
+            <li>キーパッドの <code>=</code> またはキーボードの <code>Enter</code> を押すと計算が確定し、上部の履歴に残る。</li>
+            <li>小数点の計算（<code>0.1 + 0.2</code> など）で起こりやすい端数のズレも自動で補正され、正確に計算される。</li>
           </ul>
 
-          <p><strong>■ リアクティブ変数システム</strong></p>
+          <p><strong>■ 計算結果を変数に保存・活用する</strong></p>
           <ul style="padding-left: 18px; margin-bottom: 14px;">
-            <li><code>taxA = 1.1</code> のように代入式を入力して実行することで、環境変数が登録される。</li>
-            <li>登録された変数は画面上部の「変数チップ」に一覧表示され、ワンタップで数式中に変数名を挿入できる。</li>
-            <li>変数同士を連動参照させた場合（例: <code>taxB = taxA</code>）、大元の <code>taxA</code> の値を更新すると、依存する <code>taxB</code> も自動的にカスケード再計算される。</li>
-            <li>不要になった変数は、チップ右端の [×] を押すことで即座に削除できる。</li>
-            <li>上部の <code>[+ 変数]</code> ボタンからダイアログ形式で変数を登録することも可能である。</li>
+            <li>過去の計算結果カードをタップして「変数として保存」を選ぶと、その数値を好きな名前（例: <code>tax</code> や <code>price</code>）で登録できる。</li>
+            <li>入力欄に直接 <code>tax = 1.1</code> や <code>total = ans</code> と入力して <code>=</code> を押すことでも登録できる（<code>ans</code> は直前の計算結果）。</li>
+            <li>画面上部の「+ 変数」ボタンから名前と数値を入力して追加することもできる。</li>
+            <li>登録した変数は画面上部に並び、タップするだけで計算式の中に挿入できる。不要になった変数は <code>×</code> で削除できる。</li>
           </ul>
 
-          <p><strong>■ 枝分かれ（ブランチ）機能</strong></p>
+          <p><strong>■ 連動する変数</strong></p>
           <ul style="padding-left: 18px; margin-bottom: 14px;">
-            <li>過去の計算ログカードをタップするとアクションメニューが開く。</li>
-            <li>「枝分かれ (新タブ作成)」を選択すると、その時点の計算履歴および変数状態をそのまま引き継いだ新しいタブ（例: <code>Calc 1 (枝1)</code>）が自動生成される。</li>
-            <li>異なる税率、数量、割引率などを用いた別パターンのシミュレーションを、元の計算を壊さず並行して比較検討する用途に最適である。</li>
+            <li>変数の値に別の変数を含めることができる（例: <code>taxB = taxA</code>）。</li>
+            <li>このとき大元の <code>taxA</code> の値を変更すると、連動している <code>taxB</code> も自動的に再計算される。</li>
           </ul>
 
-          <p><strong>■ タブ（セッション）管理</strong></p>
+          <p><strong>■ 枝分かれ（別パターンの試算）</strong></p>
           <ul style="padding-left: 18px; margin-bottom: 14px;">
-            <li>上部タブバーの <code>+</code> ボタンを押すことで、独立した計算タブを自由に追加できる。</li>
-            <li>各タブごとに計算履歴、変数テーブルは完全に独立して管理される。</li>
-            <li>タブをダブルクリック（または長押し）することで、任意のわかりやすい名前に変更できる。</li>
-            <li>タブの計算履歴や変数は、ブラウザの LocalStorage に自動的に保存・永続化される。</li>
+            <li>計算結果カードをタップして「枝分かれ (新タブ作成)」を選ぶと、その時点の計算履歴と変数を引き継いだ新しいタブが作成される。</li>
+            <li>元の計算を残したまま、「別の割引率ならいくらになるか」といった比較試算を並行して行うのに役立つ。</li>
           </ul>
 
-          <p><strong>■ スマートな括弧・平方根の自動補完</strong></p>
+          <p><strong>■ タブの切り替えと自動保存</strong></p>
           <ul style="padding-left: 18px; margin-bottom: 14px;">
-            <li>行末で <code>(</code> を入力した場合は自動で <code>()</code> が補完され、カーソルが自動的にかっこの間 <code>(|)</code> に移動する。</li>
-            <li>数式の途中で <code>(</code> を入力した場合は、既存の文字を乱さないよう単一の <code>(</code> のみ挿入される。</li>
-            <li><code>√</code> を押すと <code>sqrt()</code> が入力され、同様に括弧内にカーソルが自動配置される。</li>
+            <li>上部の <code>+</code> ボタンで新しい計算タブを追加できる。</li>
+            <li>タブ名をダブルクリック（スマホは長押し）すると、好きな名前に変更できる（例: 「見積もりA」「試算B」）。</li>
+            <li>計算した履歴や変数はブラウザに自動保存されるため、画面を閉じたり再読み込みしても消えない。</li>
           </ul>
 
-          <p><strong>■ CSV書き出し ＆ PWA（アプリ化）対応</strong></p>
+          <p><strong>■ 画面・キー操作の便利機能</strong></p>
           <ul style="padding-left: 18px; margin-bottom: 14px;">
-            <li>ヘッダーのダウンロードアイコンを押すと、現在開いているタブの計算履歴（日時、式、結果、種別）を CSV 形式でダウンロードできる（Excel対応 UTF-8 BOM付き）。</li>
-            <li>ブラウザメニューから「ホーム画面に追加」または「アプリをインストール」を選択することで、アドレスバーのない独立したネイティブアプリとしてインストール可能である。</li>
-            <li>Service Worker によりオフラインキャッシュが有効化されており、通信環境のないオフライン状態でも完全に動作する。</li>
+            <li>右上の電卓アイコンを押すとキーパッドを隠すことができ、計算履歴を画面いっぱいに広く確認できる。</li>
+            <li>右上のキーボードアイコンを押すと、スマホのキーボードを使って文字や数値を直接入力できる。</li>
+            <li>式の末尾で <code>(</code> を押すと自動で <code>()</code> が入力され、カーソルが括弧の間に移動する。</li>
+            <li><code>BS</code> キーで直前の1文字を削除できる。</li>
           </ul>
 
-          <p><strong>■ キーボードショートカット (PC)</strong></p>
+          <p><strong>■ CSVダウンロードとアプリ化</strong></p>
           <ul style="padding-left: 18px; margin-bottom: 14px;">
-            <li><code>Enter</code>: 計算実行 / 変数登録</li>
-            <li><code>▲ / ▼</code> (Arrow Up / Down): 過去の入力式を遡る / 次の式に進む</li>
-            <li><code>Esc</code>: 入力欄クリア（ポップアップ表示中は閉じる）</li>
+            <li>上部のダウンロードアイコンを押すと、現在開いているタブの計算履歴をCSVファイルとして保存できる（Excelでそのまま開ける）。</li>
+            <li>ブラウザメニューの「ホーム画面に追加」または「アプリをインストール」を選ぶと、アプリとしてインストールできる。電波のないオフラインでもそのまま使える。</li>
+          </ul>
+
+          <p><strong>■ パソコンでのキーボード操作</strong></p>
+          <ul style="padding-left: 18px; margin-bottom: 14px;">
+            <li><code>Enter</code>: 計算の実行 / 変数の登録</li>
+            <li><code>▲ / ▼</code>: 過去に入力した式をさかのぼる / 戻る</li>
+            <li><code>Esc</code>: 入力欄のクリア（ポップアップ表示時は画面を閉じる）</li>
           </ul>
 
           <div style="text-align: right; margin-top: 20px; font-family: var(--font-mono); font-size: 11px; opacity: 0.6; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
