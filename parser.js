@@ -1,5 +1,5 @@
 /**
- * MonoPrompt / Math Engine - Reactive Expression & AST Parser
+ * AlternativeCalc - Reactive Expression & AST Parser
  * Features:
  * - Reactive Variables: Updating a base variable automatically recalculates dependent variables.
  *   (e.g., taxA = 1.1 -> taxB = taxA -> taxA = 1.08 updates taxB to 1.08)

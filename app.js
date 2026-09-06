@@ -153,12 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
     parser = new MathParser();
     if (active && active.variables) {
       Object.entries(active.variables).forEach(([k, data]) => {
-        if (data && typeof data === 'object' && 'expr' in data) {
-          parser.setVariable(k, data.expr);
-        } else if (typeof data === 'number') {
-          parser.setVariable(k, String(data));
-        }
+        const exprStr = (data && typeof data === 'object' && 'expr' in data) ? data.expr : String(data);
+        parser.variables[k] = { expr: String(exprStr).trim(), value: 0 };
       });
+      parser.recalculateAll();
     }
   };
 
@@ -386,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   formulaInput.addEventListener('input', () => {
+    historyNavIndex = -1;
     updateCaretPosition();
     updateLivePreview();
   });
@@ -658,12 +657,12 @@ document.addEventListener('DOMContentLoaded', () => {
       formulaInput.setAttribute('inputmode', 'text');
       toggleKeyboardModeBtn.classList.add('active');
       formulaInput.focus();
-      showToast('ソフトウェアキーボード: ON');
+      showToast('文字入力キーボード: ON');
     } else {
       formulaInput.setAttribute('inputmode', 'none');
       toggleKeyboardModeBtn.classList.remove('active');
       formulaInput.blur();
-      showToast('ソフトウェアキーボード: OFF');
+      showToast('文字入力キーボード: OFF');
     }
   });
 

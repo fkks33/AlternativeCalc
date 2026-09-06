@@ -3,11 +3,6 @@
 > **計算式・連動変数・枝分かれを備えた次世代Web電卓**  
 > 式をそのまま入力できるシンプルな操作感と、計算結果を変数として保存・連動させる機能、試算パターンを比較できる「枝分かれ」を備えた電卓ツールである。
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
-![PWA](https://img.shields.io/badge/PWA-ready-black.svg)
-![Version](https://img.shields.io/badge/version-1.0-orange.svg)
-
 ---
 
 ## 概要

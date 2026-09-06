@@ -1,5 +1,5 @@
 /* ==========================================================================
-   MonoPrompt - Material 3 Expressive Monochrome Theme
+   AlternativeCalc - Material 3 Expressive Monochrome Theme
    Designed for desktop & mobile with rich tactile interactions
    ========================================================================== */
 
@@ -372,13 +372,6 @@ html, body {
   transform: scale(0.94);
 }
 
-.var-chip.memory-chip {
-  background: #ffffff;
-  color: #000000;
-  font-weight: 700;
-  border: none;
-}
-
 .var-chip .var-name {
   opacity: 0.75;
 }
@@ -435,16 +428,6 @@ html, body {
   flex-direction: column;
   gap: 12px;
   scroll-behavior: smooth;
-}
-
-.log-empty-state {
-  margin: auto;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.8;
-  max-width: 280px;
-  padding: 24px 0;
 }
 
 .log-card {

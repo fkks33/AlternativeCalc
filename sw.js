@@ -12,6 +12,7 @@ const ASSETS_TO_CACHE = [
   './parser.js',
   './app.js',
   './manifest.json',
+  './favicon.png',
   './icon-192.png',
   './icon-512.png'
 ];
