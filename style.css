@@ -3,6 +3,7 @@
    Designed for desktop & mobile with rich tactile interactions
    ========================================================================== */
 
+/* Base Theme Tokens (Default: Dark Monotone) */
 :root {
   /* Surface colors (Dark Onyx Monotone) */
   --bg-app: #0d0e11;
@@ -28,7 +29,7 @@
   --key-func-active: #323642;
   --key-func-text: #a1a7b4;
 
-  /* Primary Accent (High-contrast Monotone White) */
+  /* Primary Accent */
   --key-primary-bg: #ffffff;
   --key-primary-hover: #eaeaea;
   --key-primary-active: #cccccc;
@@ -67,6 +68,66 @@
   /* Animations */
   --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --transition-fast: 120ms cubic-bezier(0.2, 0, 0, 1);
+
+  /* Dynamic elements */
+  --toast-bg: #ffffff;
+  --toast-text: #000000;
+  --tab-active-bg: #ffffff;
+  --tab-active-text: #000000;
+  --pc-bg: radial-gradient(circle at top, #1a1c23 0%, #0d0e11 100%);
+}
+
+/* Light Theme (Conforms to OS prefers-color-scheme: light) */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-app: #e9ecef;
+    --surface-lowest: #ffffff;
+    --surface-low: #f8f9fa;
+    --surface-card: #ffffff;
+    --surface-card-hover: #f1f3f5;
+    --surface-input: #ffffff;
+    
+    --key-num-bg: #f8f9fa;
+    --key-num-hover: #e9ecef;
+    --key-num-active: #dee2e6;
+    --key-num-text: #212529;
+
+    --key-op-bg: #e9ecef;
+    --key-op-hover: #dee2e6;
+    --key-op-active: #ced4da;
+    --key-op-text: #111214;
+
+    --key-func-bg: #f1f3f5;
+    --key-func-hover: #e9ecef;
+    --key-func-active: #dee2e6;
+    --key-func-text: #495057;
+
+    --key-primary-bg: #111214;
+    --key-primary-hover: #2b2e35;
+    --key-primary-active: #000000;
+    --key-primary-text: #ffffff;
+
+    --text-primary: #111214;
+    --text-secondary: #495057;
+    --text-muted: #868e96;
+    --text-preview: #6c757d;
+    --text-error: #e03131;
+    --text-badge: #ffffff;
+
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-card: rgba(0, 0, 0, 0.12);
+    --border-focus: rgba(0, 0, 0, 0.35);
+
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-key: 0 2px 0 rgba(0, 0, 0, 0.1);
+
+    --toast-bg: #111214;
+    --toast-text: #ffffff;
+    --tab-active-bg: #111214;
+    --tab-active-text: #ffffff;
+    --pc-bg: radial-gradient(circle at top, #dee2e6 0%, #ced4da 100%);
+  }
 }
 
 /* Base reset */
@@ -207,9 +268,9 @@ html, body {
 }
 
 .session-tab.active {
-  background: #ffffff;
-  color: #000000;
-  border-color: #ffffff;
+  background: var(--tab-active-bg);
+  color: var(--tab-active-text);
+  border-color: var(--tab-active-bg);
   box-shadow: var(--shadow-sm);
 }
 
@@ -748,8 +809,8 @@ html, body {
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
-  background: #ffffff;
-  color: #000000;
+  background: var(--toast-bg);
+  color: var(--toast-text);
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 700;
@@ -774,7 +835,7 @@ html, body {
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: radial-gradient(circle at top, #1a1c23 0%, #0d0e11 100%);
+    background: var(--pc-bg);
   }
 
   .app-container {

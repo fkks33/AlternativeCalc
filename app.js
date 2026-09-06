@@ -1,11 +1,12 @@
 /**
- * MonoPrompt / Calculator - Application Controller
+ * VarCalc - Application Controller
  * Supports:
- * - Multi-session tabs
+ * - Multi-session tabs & Branching (枝分かれ)
  * - Reactive variable chaining (taxA=1.1 -> taxB=taxA -> taxA=1.08 cascades to taxB)
  * - Safe touch keypad handling (no unwanted mobile OS keyboard)
  * - Smart smart-parentheses auto-pairing at end-of-line
- * - Clean minimal UI without legacy memory keys
+ * - Dual Light/Dark themes (system preference compliant)
+ * - In-app Help popup guide
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,11 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleKeypadBtn = document.getElementById('toggleKeypadBtn');
   const toggleKeyboardModeBtn = document.getElementById('toggleKeyboardModeBtn');
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  const openHelpBtn = document.getElementById('openHelpBtn');
   const toastNotice = document.getElementById('toastNotice');
   const tabsContainer = document.getElementById('tabsContainer');
   const addTabBtn = document.getElementById('addTabBtn');
 
   // Modals
+  const helpModal = document.getElementById('helpModal');
+  const closeHelpBtn = document.getElementById('closeHelpBtn');
+
   const addVarModal = document.getElementById('addVarModal');
   const openAddVarBtn = document.getElementById('openAddVarBtn');
   const cancelVarBtn = document.getElementById('cancelVarBtn');
@@ -35,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const historyActionModal = document.getElementById('historyActionModal');
   const actionModalExpr = document.getElementById('actionModalExpr');
+  const actionBranchOut = document.getElementById('actionBranchOut');
   const actionReuseExpr = document.getElementById('actionReuseExpr');
   const actionInsertResult = document.getElementById('actionInsertResult');
   const actionCopyResult = document.getElementById('actionCopyResult');
@@ -48,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let historyNavIndex = -1;
   let tempCurrentInput = '';
   let selectedLogItem = null;
+  let selectedLogIndex = -1;
   let isOSKeyboardEnabled = false;
 
   // Haptic feedback
@@ -79,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   // LocalStorage Persistence
   // --------------------------------------------------------------------------
-  const STORAGE_KEY = 'monoprompt_sessions_v3';
+  const STORAGE_KEY = 'varcalc_sessions_v1';
 
   const loadSavedData = () => {
     try {
@@ -135,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const active = getActiveSession();
     parser = new MathParser();
     if (active && active.variables) {
-      // Restore variables
       Object.entries(active.variables).forEach(([k, data]) => {
         if (data && typeof data === 'object' && 'expr' in data) {
           parser.setVariable(k, data.expr);
@@ -147,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // --------------------------------------------------------------------------
-  // Tab Management
+  // Tab Management & Branching (枝分かれ)
   // --------------------------------------------------------------------------
   const renderTabs = () => {
     tabsContainer.innerHTML = '';
@@ -262,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // Variable Chips Rendering (No memory hardcoding, shows reactive value)
+  // Variable Chips Rendering
   // --------------------------------------------------------------------------
   const renderVariableChips = () => {
     varChipsContainer.innerHTML = '';
@@ -333,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       card.addEventListener('click', () => {
         haptic();
-        openHistoryAction(item);
+        openHistoryAction(item, index);
       });
 
       logArea.appendChild(card);
@@ -366,7 +372,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLivePreview();
   });
 
-  // Insert text at current cursor position
   const insertTextAtCursor = (text) => {
     haptic();
     const start = formulaInput.selectionStart ?? formulaInput.value.length;
@@ -384,16 +389,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLivePreview();
   };
 
-  // Smart Parentheses Handling:
-  // If at the end of the line, insert "()" and move cursor inside.
-  // If in the middle, just insert "(" without closing paren.
+  // Smart Parentheses: insert "()" only at the end of input
   const handleOpenParen = () => {
     haptic();
     const start = formulaInput.selectionStart ?? formulaInput.value.length;
     const end = formulaInput.selectionEnd ?? formulaInput.value.length;
     const current = formulaInput.value;
 
-    // Only auto-pair "()" when cursor is at the very end of input and nothing is selected
     if (start === end && start === current.length) {
       formulaInput.value = current + '()';
       const newPos = start + 1;
@@ -409,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLivePreview();
   };
 
-  // Backspace from cursor
   const performBackspace = () => {
     haptic();
     const start = formulaInput.selectionStart ?? formulaInput.value.length;
@@ -457,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formulaInput.value = '';
       updateLivePreview();
       renderHistory();
-      renderVariableChips(); // Reflect reactive cascades
+      renderVariableChips();
       saveData();
       historyNavIndex = -1;
     } catch (err) {
@@ -517,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.target.closest('.key-btn');
     if (!btn) return;
     if (!isOSKeyboardEnabled) {
-      e.preventDefault(); // Prevents input focus stealing / OS keyboard popup
+      e.preventDefault();
     }
   });
 
@@ -580,7 +581,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard Events (PC physical keyboard)
   // --------------------------------------------------------------------------
   formulaInput.addEventListener('keydown', (e) => {
-    // Intercept "(" on physical keyboard for end-of-line auto-pairing
     if (e.key === '(') {
       const start = formulaInput.selectionStart ?? formulaInput.value.length;
       const end = formulaInput.selectionEnd ?? formulaInput.value.length;
@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('keydown', (e) => {
-    if (addVarModal.classList.contains('open') || historyActionModal.classList.contains('open')) {
+    if (addVarModal.classList.contains('open') || historyActionModal.classList.contains('open') || helpModal.classList.contains('open')) {
       if (e.key === 'Escape') closeModals();
       return;
     }
@@ -617,15 +617,46 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // History Item Action Modal
+  // History Item Action Modal & Branching
   // --------------------------------------------------------------------------
-  const openHistoryAction = (item) => {
+  const openHistoryAction = (item, index) => {
     selectedLogItem = item;
+    selectedLogIndex = index;
     actionModalExpr.textContent = item.isError 
       ? item.expr 
       : `${item.expr} = ${MathParser.formatNumber(item.result)}`;
     historyActionModal.classList.add('open');
   };
+
+  // Branch Out (枝分かれ)
+  actionBranchOut.addEventListener('click', () => {
+    if (selectedLogItem && selectedLogIndex >= 0) {
+      haptic();
+      const active = getActiveSession();
+      if (!active) return;
+
+      // Slice history up to the selected item
+      const branchHistory = active.historyLogs.slice(0, selectedLogIndex + 1);
+      const branchVars = JSON.parse(JSON.stringify(parser.variables));
+
+      // Create branch name
+      const baseName = active.name.replace(/\s*\(枝\d*\)$/, '');
+      const branchNum = sessions.filter(s => s.name.startsWith(baseName)).length;
+      const newTabName = `${baseName} (枝${branchNum})`;
+
+      const branchSession = {
+        id: 'session_' + Date.now(),
+        name: newTabName,
+        variables: branchVars,
+        historyLogs: JSON.parse(JSON.stringify(branchHistory))
+      };
+
+      sessions.push(branchSession);
+      switchSession(branchSession.id);
+      closeModals();
+      showToast(`"${branchSession.name}" に枝分かれしました`);
+    }
+  });
 
   actionReuseExpr.addEventListener('click', () => {
     if (selectedLogItem) {
@@ -658,6 +689,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   actionCloseModal.addEventListener('click', () => {
+    closeModals();
+  });
+
+  // --------------------------------------------------------------------------
+  // Help Modal
+  // --------------------------------------------------------------------------
+  openHelpBtn.addEventListener('click', () => {
+    haptic();
+    helpModal.classList.add('open');
+  });
+
+  closeHelpBtn.addEventListener('click', () => {
     closeModals();
   });
 
@@ -699,10 +742,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeModals = () => {
     addVarModal.classList.remove('open');
     historyActionModal.classList.remove('open');
+    helpModal.classList.remove('open');
     selectedLogItem = null;
+    selectedLogIndex = -1;
   };
 
-  [addVarModal, historyActionModal].forEach(modal => {
+  [addVarModal, historyActionModal, helpModal].forEach(modal => {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModals();
     });

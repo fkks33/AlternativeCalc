@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#0d0e11">
-  <title>MonoPrompt - Terminal Calculator</title>
+  <title>VarCalc</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,9 +16,12 @@
     <!-- Top Header -->
     <header class="app-header">
       <div class="brand-group">
-        <h1 class="app-title">MonoPrompt</h1>
+        <h1 class="app-title">VarCalc</h1>
       </div>
       <div class="header-actions">
+        <button id="openHelpBtn" class="icon-btn" title="使い方" aria-label="Help">
+          <span style="font-weight: 700; font-size: 15px;">?</span>
+        </button>
         <button id="toggleKeyboardModeBtn" class="icon-btn" title="スマホキーボード表示切替" aria-label="Toggle OS Keyboard">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="4" width="20" height="16" rx="3"></rect>
@@ -66,7 +70,6 @@
           type="text" 
           id="formulaInput" 
           class="formula-input" 
-          placeholder="数式または変数 (例: 100 * (1 + tax))" 
           autocomplete="off" 
           autocorrect="off" 
           autocapitalize="off" 
@@ -143,6 +146,10 @@
       <div class="modal-card">
         <h2 class="modal-title" id="actionModalExpr">計算ログ</h2>
         <div class="action-sheet-menu">
+          <button class="action-menu-btn" id="actionBranchOut" style="border-color: rgba(255,255,255,0.25);">
+            <span>🌿 ここから枝分かれ (新タブ作成)</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+          </button>
           <button class="action-menu-btn" id="actionReuseExpr">
             <span>式を入力欄にセット</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 00-4-4H4"></path></svg>
@@ -158,6 +165,34 @@
           <button class="action-menu-btn" id="actionCloseModal" style="margin-top: 8px; justify-content: center; color: var(--text-muted);">
             閉じる
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Help / User Guide -->
+    <div class="modal-overlay" id="helpModal">
+      <div class="modal-card" style="max-height: 80vh; overflow-y: auto;">
+        <h2 class="modal-title">VarCalc の使い方</h2>
+        <div class="help-content" style="font-size: 13px; line-height: 1.7; color: var(--text-secondary);">
+          <p style="margin-bottom: 10px;"><strong>■ 基本的な計算</strong><br>
+          四則演算や括弧付きの式をそのまま打ち込んで <code>=</code> または <code>Enter</code> を押します。<br>
+          例: <code>1122 * (4.75 + 4570) + 2500 + 2500</code></p>
+
+          <p style="margin-bottom: 10px;"><strong>■ リアクティブ変数</strong><br>
+          <code>taxA = 1.1</code> のように代入できます。<br>
+          <code>taxB = taxA</code> と定義した後に <code>taxA = 1.08</code> を変更すると、<code>taxB</code> も自動的に再計算・連動更新されます。</p>
+
+          <p style="margin-bottom: 10px;"><strong>■ 枝分かれ（ブランチ）</strong><br>
+          過去の計算結果をタップして<strong>「ここから枝分かれ」</strong>を選ぶと、その時点の計算履歴と変数を引き継いだ新しいタブが作成されます。シミュレーションや別パターンの検討に便利です。</p>
+
+          <p style="margin-bottom: 10px;"><strong>■ かっこの自動補完</strong><br>
+          行末で <code>(</code> を押すと自動で <code>()</code> が入力され、カーソルがかっこの間に移動します。</p>
+
+          <p><strong>■ キーボードショートカット (PC)</strong><br>
+          <code>Enter</code>: 実行 / <code>▲・▼</code>: 過去の式を呼び出し / <code>Esc</code>: 入力クリア</p>
+        </div>
+        <div class="modal-actions" style="margin-top: 16px;">
+          <button class="modal-btn modal-btn-save" id="closeHelpBtn">閉じる</button>
         </div>
       </div>
     </div>
