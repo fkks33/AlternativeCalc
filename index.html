@@ -8,8 +8,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="VarCalc">
-  <title>VarCalc</title>
+  <meta name="apple-mobile-web-app-title" content="AlternativeCalc">
+  <title>AlternativeCalc</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="style.css">
@@ -22,7 +22,7 @@
     <!-- Top Header -->
     <header class="app-header">
       <div class="brand-group">
-        <h1 class="app-title">VarCalc</h1>
+        <h1 class="app-title">AlternativeCalc</h1>
       </div>
       <div class="header-actions">
         <button id="openHelpBtn" class="icon-btn" title="使い方" aria-label="Help">
@@ -174,24 +174,65 @@
     <!-- Modal: Help / User Guide -->
     <div class="modal-overlay" id="helpModal">
       <div class="modal-card" style="max-height: 80vh; overflow-y: auto;">
-        <h2 class="modal-title">VarCalc の使い方</h2>
-        <div class="help-content" style="font-size: 13px; line-height: 1.7; color: var(--text-secondary);">
-          <p style="margin-bottom: 10px;"><strong>■ 基本的な計算</strong><br>
-          四則演算や括弧付きの式をそのまま打ち込んで <code>=</code> または <code>Enter</code> を押します。<br>
-          例: <code>1122 * (4.75 + 4570) + 2500 + 2500</code></p>
+        <h2 class="modal-title">AlternativeCalc の使い方</h2>
+        <div class="help-content" style="font-size: 13px; line-height: 1.8; color: var(--text-secondary);">
+          <p><strong>■ 基本的な計算</strong></p>
+          <ul style="padding-left: 18px; margin-bottom: 14px;">
+            <li>四則演算（<code>+</code>, <code>−</code>, <code>×</code>, <code>÷</code>）、括弧 <code>()</code>、小数点 <code>.</code>、べき乗 <code>xʸ</code>、平方根 <code>√</code> に完全対応している。</li>
+            <li>例: <code>1122 * (4.75 + 4570) + 2500 + 2500</code></li>
+            <li>数式を入力している途中で、文法が成立した時点で入力欄下部に薄くリアルタイムプレビューが表示される。</li>
+            <li>キーパッドの <code>=</code> または物理キーボードの <code>Enter</code> を押すことで計算が確定し、上部に計算ログとして蓄積される。</li>
+            <li>JavaScript特有の浮動小数点丸め誤差（例: <code>0.1 + 0.2 = 0.30000000000000004</code>）は内部で自動補正され、正確な十進数で評価される。</li>
+          </ul>
 
-          <p style="margin-bottom: 10px;"><strong>■ リアクティブ変数</strong><br>
-          <code>taxA = 1.1</code> のように代入できます。<br>
-          <code>taxB = taxA</code> と定義した後に <code>taxA = 1.08</code> を変更すると、<code>taxB</code> も自動的に再計算・連動更新されます。</p>
+          <p><strong>■ リアクティブ変数システム</strong></p>
+          <ul style="padding-left: 18px; margin-bottom: 14px;">
+            <li><code>taxA = 1.1</code> のように代入式を入力して実行することで、環境変数が登録される。</li>
+            <li>登録された変数は画面上部の「変数チップ」に一覧表示され、ワンタップで数式中に変数名を挿入できる。</li>
+            <li>変数同士を連動参照させた場合（例: <code>taxB = taxA</code>）、大元の <code>taxA</code> の値を更新すると、依存する <code>taxB</code> も自動的にカスケード再計算される。</li>
+            <li>不要になった変数は、チップ右端の [×] を押すことで即座に削除できる。</li>
+            <li>上部の <code>[+ 変数]</code> ボタンからダイアログ形式で変数を登録することも可能である。</li>
+          </ul>
 
-          <p style="margin-bottom: 10px;"><strong>■ 枝分かれ（ブランチ）</strong><br>
-          過去の計算結果をタップして<strong>「ここから枝分かれ」</strong>を選ぶと、その時点の計算履歴と変数を引き継いだ新しいタブが作成されます。シミュレーションや別パターンの検討に便利です。</p>
+          <p><strong>■ 枝分かれ（ブランチ）機能</strong></p>
+          <ul style="padding-left: 18px; margin-bottom: 14px;">
+            <li>過去の計算ログカードをタップするとアクションメニューが開く。</li>
+            <li>「枝分かれ (新タブ作成)」を選択すると、その時点の計算履歴および変数状態をそのまま引き継いだ新しいタブ（例: <code>Calc 1 (枝1)</code>）が自動生成される。</li>
+            <li>異なる税率、数量、割引率などを用いた別パターンのシミュレーションを、元の計算を壊さず並行して比較検討する用途に最適である。</li>
+          </ul>
 
-          <p style="margin-bottom: 10px;"><strong>■ かっこの自動補完</strong><br>
-          行末で <code>(</code> を押すと自動で <code>()</code> が入力され、カーソルがかっこの間に移動します。</p>
+          <p><strong>■ タブ（セッション）管理</strong></p>
+          <ul style="padding-left: 18px; margin-bottom: 14px;">
+            <li>上部タブバーの <code>+</code> ボタンを押すことで、独立した計算タブを自由に追加できる。</li>
+            <li>各タブごとに計算履歴、変数テーブルは完全に独立して管理される。</li>
+            <li>タブをダブルクリック（または長押し）することで、任意のわかりやすい名前に変更できる。</li>
+            <li>タブの計算履歴や変数は、ブラウザの LocalStorage に自動的に保存・永続化される。</li>
+          </ul>
 
-          <p><strong>■ キーボードショートカット (PC)</strong><br>
-          <code>Enter</code>: 実行 / <code>▲・▼</code>: 過去の式を呼び出し / <code>Esc</code>: 入力クリア</p>
+          <p><strong>■ スマートな括弧・平方根の自動補完</strong></p>
+          <ul style="padding-left: 18px; margin-bottom: 14px;">
+            <li>行末で <code>(</code> を入力した場合は自動で <code>()</code> が補完され、カーソルが自動的にかっこの間 <code>(|)</code> に移動する。</li>
+            <li>数式の途中で <code>(</code> を入力した場合は、既存の文字を乱さないよう単一の <code>(</code> のみ挿入される。</li>
+            <li><code>√</code> を押すと <code>sqrt()</code> が入力され、同様に括弧内にカーソルが自動配置される。</li>
+          </ul>
+
+          <p><strong>■ CSV書き出し ＆ PWA（アプリ化）対応</strong></p>
+          <ul style="padding-left: 18px; margin-bottom: 14px;">
+            <li>ヘッダーのダウンロードアイコンを押すと、現在開いているタブの計算履歴（日時、式、結果、種別）を CSV 形式でダウンロードできる（Excel対応 UTF-8 BOM付き）。</li>
+            <li>ブラウザメニューから「ホーム画面に追加」または「アプリをインストール」を選択することで、アドレスバーのない独立したネイティブアプリとしてインストール可能である。</li>
+            <li>Service Worker によりオフラインキャッシュが有効化されており、通信環境のないオフライン状態でも完全に動作する。</li>
+          </ul>
+
+          <p><strong>■ キーボードショートカット (PC)</strong></p>
+          <ul style="padding-left: 18px; margin-bottom: 14px;">
+            <li><code>Enter</code>: 計算実行 / 変数登録</li>
+            <li><code>▲ / ▼</code> (Arrow Up / Down): 過去の入力式を遡る / 次の式に進む</li>
+            <li><code>Esc</code>: 入力欄クリア（ポップアップ表示中は閉じる）</li>
+          </ul>
+
+          <div style="text-align: right; margin-top: 20px; font-family: var(--font-mono); font-size: 11px; opacity: 0.6; border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+            AlternativeCalc ver 1.0
+          </div>
         </div>
         <div class="modal-actions" style="margin-top: 16px;">
           <button class="modal-btn modal-btn-save" id="closeHelpBtn">閉じる</button>

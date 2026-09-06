@@ -1,9 +1,10 @@
 /**
- * VarCalc Service Worker
+ * AlternativeCalc Service Worker
  * Enables offline caching and standalone PWA launch.
+ * Version 1.0
  */
 
-const CACHE_NAME = 'varcalc-v1';
+const CACHE_NAME = 'alternativecalc-v1.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -37,7 +38,6 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cached) => {
       return cached || fetch(e.request).catch(() => {
-        // Fallback to cache if network fails
         return caches.match('./index.html');
       });
     })

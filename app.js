@@ -1,5 +1,5 @@
 /**
- * VarCalc - Application Controller
+ * AlternativeCalc - Application Controller
  * Supports:
  * - Multi-session tabs & Branching (枝分かれ)
  * - Reactive variable chaining (taxA=1.1 -> taxB=taxA -> taxA=1.08 cascades to taxB)
@@ -7,6 +7,7 @@
  * - Smart smart-parentheses auto-pairing at end-of-line
  * - Dual Light/Dark themes (system preference compliant)
  * - In-app Help popup guide
+ * Version: 1.0
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -89,11 +90,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   // LocalStorage Persistence
   // --------------------------------------------------------------------------
-  const STORAGE_KEY = 'varcalc_sessions_v1';
+  const STORAGE_KEY = 'alternativecalc_sessions_v1';
+  const STORAGE_KEY_FALLBACK = 'varcalc_sessions_v1';
 
   const loadSavedData = () => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY_FALLBACK);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed.sessions) && parsed.sessions.length > 0) {
@@ -853,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const a = document.createElement('a');
     a.href = url;
     const safeName = (active.name || 'session').replace(/[\\/:*?"<>|]/g, '_');
-    a.download = `VarCalc_${safeName}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `AlternativeCalc_${safeName}_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

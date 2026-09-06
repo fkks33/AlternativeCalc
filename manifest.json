@@ -1,6 +1,6 @@
 {
-  "name": "VarCalc",
-  "short_name": "VarCalc",
+  "name": "AlternativeCalc",
+  "short_name": "AlternativeCalc",
   "description": "Reactive Variable & Terminal Formula Calculator",
   "start_url": "./index.html",
   "display": "standalone",
