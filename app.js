@@ -31,10 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modals
   const helpModal = document.getElementById('helpModal');
   const closeHelpBtn = document.getElementById('closeHelpBtn');
+  const closeHelpIconBtn = document.getElementById('closeHelpIconBtn');
 
   const addVarModal = document.getElementById('addVarModal');
   const openAddVarBtn = document.getElementById('openAddVarBtn');
   const cancelVarBtn = document.getElementById('cancelVarBtn');
+  const cancelVarIconBtn = document.getElementById('cancelVarIconBtn');
   const saveVarBtn = document.getElementById('saveVarBtn');
   const varNameInput = document.getElementById('varNameInput');
   const varValueInput = document.getElementById('varValueInput');
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const actionInsertResult = document.getElementById('actionInsertResult');
   const actionCopyResult = document.getElementById('actionCopyResult');
   const actionCloseModal = document.getElementById('actionCloseModal');
+  const closeActionIconBtn = document.getElementById('closeActionIconBtn');
 
   // --------------------------------------------------------------------------
   // State
@@ -791,6 +794,9 @@ document.addEventListener('DOMContentLoaded', () => {
   actionCloseModal.addEventListener('click', () => {
     closeModals();
   });
+  closeActionIconBtn?.addEventListener('click', () => {
+    closeModals();
+  });
 
   // --------------------------------------------------------------------------
   // Help Modal
@@ -801,6 +807,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   closeHelpBtn.addEventListener('click', () => {
+    closeModals();
+  });
+  closeHelpIconBtn?.addEventListener('click', () => {
     closeModals();
   });
 
@@ -817,6 +826,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cancelVarBtn.addEventListener('click', () => {
     closeModals();
+  });
+  cancelVarIconBtn?.addEventListener('click', () => {
+    closeModals();
+  });
+
+  // Click on input section padding focuses the formula input
+  document.querySelector('.input-section')?.addEventListener('click', (e) => {
+    if (e.target !== formulaInput) {
+      formulaInput.focus({ preventScroll: true });
+    }
   });
 
   saveVarBtn.addEventListener('click', () => {

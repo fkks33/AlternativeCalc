@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#0d0e11">
   <meta name="mobile-web-app-capable" content="yes">
@@ -27,14 +27,16 @@
       <div class="header-actions">
         <button id="toggleKeypadBtn" class="icon-btn" title="キーパッド表示切替" aria-label="Toggle Keypad">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="2" width="16" height="20" rx="3"></rect>
+            <rect x="4" y="2" width="16" height="20" rx="2"></rect>
             <line x1="8" y1="6" x2="16" y2="6"></line>
-            <line x1="8" y1="10" x2="10" y2="10"></line>
-            <line x1="14" y1="10" x2="16" y2="10"></line>
-            <line x1="8" y1="14" x2="10" y2="14"></line>
-            <line x1="14" y1="14" x2="16" y2="14"></line>
-            <line x1="8" y1="18" x2="10" y2="18"></line>
-            <line x1="14" y1="18" x2="16" y2="18"></line>
+            <line x1="16" y1="14" x2="16" y2="18"></line>
+            <path d="M16 10h.01"></path>
+            <path d="M12 10h.01"></path>
+            <path d="M8 10h.01"></path>
+            <path d="M12 14h.01"></path>
+            <path d="M8 14h.01"></path>
+            <path d="M12 18h.01"></path>
+            <path d="M8 18h.01"></path>
           </svg>
         </button>
         <button id="exportCsvBtn" class="icon-btn" title="CSVダウンロード" aria-label="Download CSV">
@@ -139,14 +141,17 @@
     <!-- Modal: Add Variable -->
     <div class="modal-overlay" id="addVarModal">
       <div class="modal-card">
-        <h2 class="modal-title">新しい変数を登録</h2>
+        <div class="modal-header">
+          <h2 class="modal-title">新しい変数を登録</h2>
+          <button class="modal-close-icon" id="cancelVarIconBtn" title="閉じる" aria-label="Close">&times;</button>
+        </div>
         <div class="modal-field">
           <label class="modal-label" for="varNameInput">変数名（英数字）</label>
           <input type="text" id="varNameInput" class="modal-input" placeholder="例: tax, price, discount">
         </div>
         <div class="modal-field">
           <label class="modal-label" for="varValueInput">値（数値または式）</label>
-          <input type="text" id="varValueInput" class="modal-input" placeholder="例: 0.1, 2980">
+          <input type="text" id="varValueInput" class="modal-input" placeholder="例: 0.1, 2980, ans">
         </div>
         <div class="modal-actions">
           <button class="modal-btn modal-btn-cancel" id="cancelVarBtn">キャンセル</button>
@@ -158,7 +163,11 @@
     <!-- Modal / Action Sheet: History Item Options -->
     <div class="modal-overlay" id="historyActionModal">
       <div class="modal-card">
-        <h2 class="modal-title" id="actionModalExpr">計算ログ</h2>
+        <div class="modal-header">
+          <span class="modal-title" style="font-size: 15px;">計算ログの操作</span>
+          <button class="modal-close-icon" id="closeActionIconBtn" title="閉じる" aria-label="Close">&times;</button>
+        </div>
+        <div id="actionModalExpr"></div>
         <div class="action-sheet-menu">
           <button class="action-menu-btn" id="actionSaveAsVar">
             <span>変数として保存</span>
@@ -189,9 +198,12 @@
 
     <!-- Modal: Help / User Guide -->
     <div class="modal-overlay" id="helpModal">
-      <div class="modal-card" style="max-height: 80vh; overflow-y: auto;">
-        <h2 class="modal-title">AlternativeCalc の使い方</h2>
-        <div class="help-content" style="font-size: 13px; line-height: 1.8; color: var(--text-secondary);">
+      <div class="modal-card modal-card-help">
+        <div class="modal-header">
+          <h2 class="modal-title">AlternativeCalc の使い方</h2>
+          <button class="modal-close-icon" id="closeHelpIconBtn" title="閉じる" aria-label="Close">&times;</button>
+        </div>
+        <div class="help-content">
           <p><strong>■ 基本的な計算</strong></p>
           <ul style="padding-left: 18px; margin-bottom: 14px;">
             <li>普通の電卓と同じように計算式をそのまま入力できる。四則演算（<code>+</code>, <code>−</code>, <code>×</code>, <code>÷</code>）、括弧 <code>()</code>、小数点 <code>.</code>、べき乗 <code>xʸ</code>、ルート <code>√</code> が使える。</li>
