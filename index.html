@@ -85,39 +85,39 @@
     <!-- Material 3 Expressive Keypad -->
     <section class="keypad-section" id="keypadSection">
       <div class="keypad-grid">
-        <!-- Row 1: Clear, Parens, Percent, Divide -->
-        <button class="key-btn btn-func" data-action="clear">C</button>
-        <button class="key-btn btn-func" data-action="open-paren">(</button>
-        <button class="key-btn btn-func" data-insert=")">)</button>
-        <button class="key-btn btn-func" data-insert="%">%</button>
+        <!-- Row 1: Clear, Backspace, Open-Paren, Close-Paren, Divide -->
+        <button class="key-btn btn-num" data-action="clear">C</button>
+        <button class="key-btn btn-num" data-action="backspace">BS</button>
+        <button class="key-btn btn-num" data-action="open-paren">(</button>
+        <button class="key-btn btn-num" data-insert=")">)</button>
         <button class="key-btn btn-op" data-insert="/">÷</button>
 
-        <!-- Row 2: 7 8 9 Power Multiply -->
+        <!-- Row 2: 7 8 9 Sqrt Multiply -->
         <button class="key-btn btn-num" data-insert="7">7</button>
         <button class="key-btn btn-num" data-insert="8">8</button>
         <button class="key-btn btn-num" data-insert="9">9</button>
-        <button class="key-btn btn-func" data-insert="^">xʸ</button>
+        <button class="key-btn btn-num" data-action="sqrt">√</button>
         <button class="key-btn btn-op" data-insert="*">×</button>
 
-        <!-- Row 3: 4 5 6 Backspace Subtract -->
+        <!-- Row 3: 4 5 6 Power Subtract -->
         <button class="key-btn btn-num" data-insert="4">4</button>
         <button class="key-btn btn-num" data-insert="5">5</button>
         <button class="key-btn btn-num" data-insert="6">6</button>
-        <button class="key-btn btn-func" data-action="backspace">⌫</button>
+        <button class="key-btn btn-num" data-insert="^">xʸ</button>
         <button class="key-btn btn-op" data-insert="-">−</button>
 
         <!-- Row 4: 1 2 3 History-Up Add -->
         <button class="key-btn btn-num" data-insert="1">1</button>
         <button class="key-btn btn-num" data-insert="2">2</button>
         <button class="key-btn btn-num" data-insert="3">3</button>
-        <button class="key-btn btn-func" data-action="history-up" title="過去の式">▲</button>
+        <button class="key-btn btn-num" data-action="history-up" title="過去の式">▲</button>
         <button class="key-btn btn-op" data-insert="+">+</button>
 
-        <!-- Row 5: 0 . 00 History-Down Equals -->
+        <!-- Row 5: 0 00 . History-Down Equals -->
         <button class="key-btn btn-num" data-insert="0">0</button>
-        <button class="key-btn btn-num" data-insert=".">.</button>
         <button class="key-btn btn-num" data-insert="00">00</button>
-        <button class="key-btn btn-func" data-action="history-down" title="次の式">▼</button>
+        <button class="key-btn btn-num" data-insert=".">.</button>
+        <button class="key-btn btn-num" data-action="history-down" title="次の式">▼</button>
         <button class="key-btn btn-enter" id="evalBtn" data-action="evaluate">=</button>
       </div>
     </section>
@@ -146,8 +146,8 @@
       <div class="modal-card">
         <h2 class="modal-title" id="actionModalExpr">計算ログ</h2>
         <div class="action-sheet-menu">
-          <button class="action-menu-btn" id="actionBranchOut" style="border-color: rgba(255,255,255,0.25);">
-            <span>🌿 ここから枝分かれ (新タブ作成)</span>
+          <button class="action-menu-btn" id="actionBranchOut">
+            <span>枝分かれ (新タブ作成)</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
           </button>
           <button class="action-menu-btn" id="actionReuseExpr">

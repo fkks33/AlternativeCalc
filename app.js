@@ -411,6 +411,27 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLivePreview();
   };
 
+  const handleSqrt = () => {
+    haptic();
+    const start = formulaInput.selectionStart ?? formulaInput.value.length;
+    const end = formulaInput.selectionEnd ?? formulaInput.value.length;
+    const current = formulaInput.value;
+
+    if (start === end && start === current.length) {
+      formulaInput.value = current + 'sqrt()';
+      const newPos = start + 5;
+      formulaInput.setSelectionRange(newPos, newPos);
+    } else {
+      insertTextAtCursor('sqrt(');
+      return;
+    }
+
+    if (isOSKeyboardEnabled) {
+      formulaInput.focus();
+    }
+    updateLivePreview();
+  };
+
   const performBackspace = () => {
     haptic();
     const start = formulaInput.selectionStart ?? formulaInput.value.length;
@@ -543,6 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
           break;
         case 'open-paren':
           handleOpenParen();
+          break;
+        case 'sqrt':
+          handleSqrt();
           break;
         case 'backspace':
           performBackspace();

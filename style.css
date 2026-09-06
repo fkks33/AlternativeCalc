@@ -595,14 +595,20 @@ html, body {
   align-items: center;
   justify-content: center;
   min-height: 52px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
+  background: var(--key-num-bg);
+  color: var(--key-num-text);
   font-family: var(--font-mono);
   font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: transform 120ms var(--spring-bounce), background-color 100ms ease, box-shadow 100ms ease;
   box-shadow: var(--shadow-key);
+}
+
+.key-btn:hover {
+  background: var(--key-num-hover);
 }
 
 .key-btn:active {
@@ -614,11 +620,6 @@ html, body {
 .key-btn.btn-num {
   background: var(--key-num-bg);
   color: var(--key-num-text);
-  border-color: var(--border-subtle);
-}
-
-.key-btn.btn-num:hover {
-  background: var(--key-num-hover);
 }
 
 .key-btn.btn-op {
@@ -629,18 +630,6 @@ html, body {
 
 .key-btn.btn-op:hover {
   background: var(--key-op-hover);
-}
-
-.key-btn.btn-func {
-  background: var(--key-func-bg);
-  color: var(--key-func-text);
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.key-btn.btn-func:hover {
-  background: var(--key-func-hover);
-  color: var(--text-primary);
 }
 
 .key-btn.btn-enter {
