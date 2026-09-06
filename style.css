@@ -118,23 +118,8 @@ html, body {
   gap: 10px;
 }
 
-.app-logo-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: #ffffff;
-  color: #000000;
-  font-family: var(--font-mono);
-  font-weight: 800;
-  font-size: 16px;
-  box-shadow: var(--shadow-sm);
-}
-
 .app-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.3px;
   color: var(--text-primary);
@@ -166,8 +151,122 @@ html, body {
   border-color: var(--border-card);
 }
 
+.icon-btn.active {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
 .icon-btn:active {
   transform: scale(0.92);
+}
+
+/* Session Tabs Bar */
+.session-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface-lowest);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.tabs-scroll-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+}
+
+.tabs-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.session-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--surface-low);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.session-tab:hover {
+  background: var(--surface-card);
+  color: var(--text-primary);
+}
+
+.session-tab.active {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.session-tab .tab-name {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-tab .tab-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 100ms ease;
+}
+
+.session-tab .tab-close-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.session-tab.active .tab-close-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.add-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: var(--surface-card);
+  border: 1px dashed var(--border-card);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.add-tab-btn:hover {
+  color: var(--text-primary);
+  border-color: #ffffff;
+  background: var(--surface-card-hover);
+}
+
+.add-tab-btn:active {
+  transform: scale(0.9);
 }
 
 /* Variables bar */

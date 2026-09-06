@@ -1,22 +1,25 @@
 /**
  * MonoPrompt - Application Controller
- * Connects UI, MathParser, LocalStorage, and Touch/Keyboard events.
+ * Supports multi-session tabs, safe touch keypad handling (no unwanted mobile keyboard),
+ * AST parsing, LocalStorage persistence, and haptic feedback.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const parser = new MathParser();
+  let parser = new MathParser();
 
   // DOM Elements
   const formulaInput = document.getElementById('formulaInput');
   const previewText = document.getElementById('previewText');
   const previewRow = document.getElementById('previewRow');
   const logArea = document.getElementById('logArea');
-  const logEmptyState = document.getElementById('logEmptyState');
   const varChipsContainer = document.getElementById('varChipsContainer');
   const keypadSection = document.getElementById('keypadSection');
   const toggleKeypadBtn = document.getElementById('toggleKeypadBtn');
+  const toggleKeyboardModeBtn = document.getElementById('toggleKeyboardModeBtn');
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
   const toastNotice = document.getElementById('toastNotice');
+  const tabsContainer = document.getElementById('tabsContainer');
+  const addTabBtn = document.getElementById('addTabBtn');
 
   // Modals
   const addVarModal = document.getElementById('addVarModal');
@@ -33,13 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const actionCopyResult = document.getElementById('actionCopyResult');
   const actionCloseModal = document.getElementById('actionCloseModal');
 
-  // App State
-  let historyLogs = []; // { expr, result, isAssignment, isError, time }
+  // --------------------------------------------------------------------------
+  // Multi-Session State
+  // --------------------------------------------------------------------------
+  let sessions = [];
+  let activeSessionId = '';
   let historyNavIndex = -1;
   let tempCurrentInput = '';
   let selectedLogItem = null;
+  let isOSKeyboardEnabled = false;
 
-  // Haptic feedback for tactile feel
+  // Haptic feedback
   const haptic = () => {
     if (navigator.vibrate) {
       try {
@@ -61,41 +68,213 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
   };
 
+  // Helper: get current active session object
+  const getActiveSession = () => {
+    return sessions.find(s => s.id === activeSessionId) || sessions[0];
+  };
+
   // --------------------------------------------------------------------------
   // LocalStorage Persistence
   // --------------------------------------------------------------------------
-  const STORAGE_KEY = 'monoprompt_data_v1';
+  const STORAGE_KEY_V2 = 'monoprompt_sessions_v2';
+  const STORAGE_KEY_V1 = 'monoprompt_data_v1';
 
   const loadSavedData = () => {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (parsed.variables) {
-          Object.entries(parsed.variables).forEach(([k, v]) => {
-            parser.setVariable(k, v);
-          });
-        }
-        if (Array.isArray(parsed.historyLogs)) {
-          historyLogs = parsed.historyLogs;
+      const v2Data = localStorage.getItem(STORAGE_KEY_V2);
+      if (v2Data) {
+        const parsed = JSON.parse(v2Data);
+        if (Array.isArray(parsed.sessions) && parsed.sessions.length > 0) {
+          sessions = parsed.sessions;
+          activeSessionId = parsed.activeSessionId || sessions[0].id;
+          syncParserWithActiveSession();
+          return;
         }
       }
+
+      // Migration from v1
+      const v1Data = localStorage.getItem(STORAGE_KEY_V1);
+      if (v1Data) {
+        const parsed = JSON.parse(v1Data);
+        const migratedSession = {
+          id: 'session_' + Date.now(),
+          name: 'Calc 1',
+          variables: parsed.variables || { ans: 0, M: 0 },
+          historyLogs: parsed.historyLogs || []
+        };
+        sessions = [migratedSession];
+        activeSessionId = migratedSession.id;
+        syncParserWithActiveSession();
+        saveData();
+        return;
+      }
     } catch (e) {
-      console.warn('Failed to load local storage data:', e);
+      console.warn('Failed to load session data:', e);
     }
+
+    // Default initialization
+    const defaultSession = {
+      id: 'session_' + Date.now(),
+      name: 'Calc 1',
+      variables: { ans: 0, M: 0 },
+      historyLogs: []
+    };
+    sessions = [defaultSession];
+    activeSessionId = defaultSession.id;
+    syncParserWithActiveSession();
   };
 
   const saveData = () => {
     try {
+      // Sync active session before saving
+      const active = getActiveSession();
+      if (active) {
+        active.variables = { ...parser.variables };
+      }
+
       const payload = {
-        variables: parser.variables,
-        historyLogs: historyLogs.slice(-50) // keep last 50
+        activeSessionId: activeSessionId,
+        sessions: sessions.map(s => ({
+          id: s.id,
+          name: s.name,
+          variables: s.variables,
+          historyLogs: s.historyLogs.slice(-50)
+        }))
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(payload));
     } catch (e) {
-      console.warn('Failed to save data:', e);
+      console.warn('Failed to save session data:', e);
     }
   };
+
+  const syncParserWithActiveSession = () => {
+    const active = getActiveSession();
+    parser = new MathParser();
+    if (active && active.variables) {
+      Object.entries(active.variables).forEach(([k, v]) => {
+        parser.setVariable(k, v);
+      });
+    }
+  };
+
+  // --------------------------------------------------------------------------
+  // Tab Management
+  // --------------------------------------------------------------------------
+  const renderTabs = () => {
+    tabsContainer.innerHTML = '';
+
+    sessions.forEach(sess => {
+      const tabEl = document.createElement('div');
+      tabEl.className = `session-tab ${sess.id === activeSessionId ? 'active' : ''}`;
+      tabEl.dataset.id = sess.id;
+      tabEl.title = 'クリックで切り替え / ダブルクリックで名前変更';
+
+      tabEl.innerHTML = `
+        <span class="tab-name">${escapeHtml(sess.name)}</span>
+        ${sessions.length > 1 ? '<span class="tab-close-btn" title="タブを閉じる">&times;</span>' : ''}
+      `;
+
+      // Switch tab
+      tabEl.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-close-btn')) {
+          e.stopPropagation();
+          deleteSession(sess.id);
+        } else {
+          switchSession(sess.id);
+        }
+      });
+
+      // Double-click or long-press to rename
+      tabEl.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        renameSession(sess.id);
+      });
+
+      tabsContainer.appendChild(tabEl);
+    });
+
+    // Auto-scroll active tab into view
+    const activeEl = tabsContainer.querySelector('.session-tab.active');
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+    }
+  };
+
+  const switchSession = (sessionId) => {
+    if (sessionId === activeSessionId) return;
+    haptic();
+
+    // Save current active session vars
+    const current = getActiveSession();
+    if (current) {
+      current.variables = { ...parser.variables };
+    }
+
+    activeSessionId = sessionId;
+    syncParserWithActiveSession();
+    formulaInput.value = '';
+    historyNavIndex = -1;
+
+    saveData();
+    renderTabs();
+    renderVariableChips();
+    renderHistory();
+    updateLivePreview();
+  };
+
+  const createNewSession = () => {
+    haptic();
+    const newSession = {
+      id: 'session_' + Date.now(),
+      name: `Calc ${sessions.length + 1}`,
+      variables: { ans: 0, M: 0 },
+      historyLogs: []
+    };
+    sessions.push(newSession);
+    switchSession(newSession.id);
+    showToast(`タブ "${newSession.name}" を作成しました`);
+  };
+
+  const deleteSession = (sessionId) => {
+    haptic();
+    if (sessions.length <= 1) {
+      showToast('最後のタブは削除できません');
+      return;
+    }
+
+    const index = sessions.findIndex(s => s.id === sessionId);
+    if (index === -1) return;
+
+    const targetName = sessions[index].name;
+    sessions.splice(index, 1);
+
+    if (activeSessionId === sessionId) {
+      const nextIndex = Math.max(0, index - 1);
+      activeSessionId = sessions[nextIndex].id;
+      syncParserWithActiveSession();
+    }
+
+    saveData();
+    renderTabs();
+    renderVariableChips();
+    renderHistory();
+    showToast(`"${targetName}" を削除しました`);
+  };
+
+  const renameSession = (sessionId) => {
+    const sess = sessions.find(s => s.id === sessionId);
+    if (!sess) return;
+    const newName = prompt('タブ名を入力してください:', sess.name);
+    if (newName && newName.trim()) {
+      sess.name = newName.trim().slice(0, 20);
+      saveData();
+      renderTabs();
+    }
+  };
+
+  addTabBtn.addEventListener('click', () => {
+    createNewSession();
+  });
 
   // --------------------------------------------------------------------------
   // Variable Chips Rendering
@@ -165,16 +344,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const renderHistory = () => {
+    const active = getActiveSession();
+    const historyLogs = active ? active.historyLogs : [];
+
     // Clear existing cards
-    const existingCards = logArea.querySelectorAll('.log-card');
-    existingCards.forEach(card => card.remove());
-
-    if (historyLogs.length === 0) {
-      logEmptyState.style.display = 'block';
-      return;
-    }
-
-    logEmptyState.style.display = 'none';
+    logArea.innerHTML = '';
 
     historyLogs.forEach((item, index) => {
       const card = document.createElement('div');
@@ -233,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLivePreview();
   });
 
-  // Insert text at current cursor position
+  // Insert text at current cursor position without triggering virtual keyboard
   const insertTextAtCursor = (text) => {
     haptic();
     const start = formulaInput.selectionStart ?? formulaInput.value.length;
@@ -242,8 +416,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     formulaInput.value = current.substring(0, start) + text + current.substring(end);
     const newPos = start + text.length;
-    formulaInput.focus();
+
+    // Set cursor position
     formulaInput.setSelectionRange(newPos, newPos);
+
+    // If OS keyboard is enabled, keep focus. Otherwise just maintain caret without popping keyboard
+    if (isOSKeyboardEnabled) {
+      formulaInput.focus();
+    }
 
     updateLivePreview();
   };
@@ -264,7 +444,10 @@ document.addEventListener('DOMContentLoaded', () => {
       formulaInput.value = current.substring(0, start) + current.substring(end);
       formulaInput.setSelectionRange(start, start);
     }
-    formulaInput.focus();
+
+    if (isOSKeyboardEnabled) {
+      formulaInput.focus();
+    }
     updateLivePreview();
   };
 
@@ -276,6 +459,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const expr = formulaInput.value.trim();
     if (!expr) return;
 
+    const active = getActiveSession();
+    if (!active) return;
+
     try {
       const evalRes = parser.evaluate(expr);
       const logItem = {
@@ -285,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isError: false,
         time: Date.now()
       };
-      historyLogs.push(logItem);
+      active.historyLogs.push(logItem);
 
       formulaInput.value = '';
       updateLivePreview();
@@ -301,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isError: true,
         time: Date.now()
       };
-      historyLogs.push(errorLog);
+      active.historyLogs.push(errorLog);
       renderHistory();
       saveData();
     }
@@ -339,7 +525,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
         } else {
-          // Use ans if input is empty
           valueToAdd = parser.variables.ans || 0;
         }
 
@@ -362,7 +547,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   const navigateHistory = (direction) => {
     haptic();
-    const validLogs = historyLogs.filter(item => !item.isError);
+    const active = getActiveSession();
+    if (!active) return;
+    const validLogs = active.historyLogs.filter(item => !item.isError);
     if (validLogs.length === 0) return;
 
     if (historyNavIndex === -1) {
@@ -385,13 +572,24 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    formulaInput.focus();
+    if (isOSKeyboardEnabled) {
+      formulaInput.focus();
+    }
     updateLivePreview();
   };
 
   // --------------------------------------------------------------------------
-  // Keypad Click / Touch Routing
+  // Keypad Touch/Click Routing (Prevent Unwanted OS Keyboard)
   // --------------------------------------------------------------------------
+  // CRITICAL: Use pointerdown with preventDefault to completely stop mobile browser from popping software keyboard
+  keypadSection.addEventListener('pointerdown', (e) => {
+    const btn = e.target.closest('.key-btn');
+    if (!btn) return;
+    if (!isOSKeyboardEnabled) {
+      e.preventDefault(); // Prevents input focus stealing / OS keyboard trigger
+    }
+  });
+
   keypadSection.addEventListener('click', (e) => {
     const btn = e.target.closest('.key-btn');
     if (!btn) return;
@@ -410,7 +608,6 @@ document.addEventListener('DOMContentLoaded', () => {
           haptic();
           formulaInput.value = '';
           updateLivePreview();
-          formulaInput.focus();
           break;
         case 'backspace':
           performBackspace();
@@ -429,14 +626,31 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
+  // Toggle OS Mobile Keyboard Button
+  // --------------------------------------------------------------------------
+  toggleKeyboardModeBtn.addEventListener('click', () => {
+    haptic();
+    isOSKeyboardEnabled = !isOSKeyboardEnabled;
+
+    if (isOSKeyboardEnabled) {
+      formulaInput.setAttribute('inputmode', 'text');
+      toggleKeyboardModeBtn.classList.add('active');
+      formulaInput.focus();
+      showToast('ソフトウェアキーボード: ON');
+    } else {
+      formulaInput.setAttribute('inputmode', 'none');
+      toggleKeyboardModeBtn.classList.remove('active');
+      formulaInput.blur();
+      showToast('ソフトウェアキーボード: OFF (電卓専用モード)');
+    }
+  });
+
+  // --------------------------------------------------------------------------
   // Keyboard Events (PC physical keyboard)
   // --------------------------------------------------------------------------
   window.addEventListener('keydown', (e) => {
-    // If modal is open, don't intercept
     if (addVarModal.classList.contains('open') || historyActionModal.classList.contains('open')) {
-      if (e.key === 'Escape') {
-        closeModals();
-      }
+      if (e.key === 'Escape') closeModals();
       return;
     }
 
@@ -470,7 +684,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (selectedLogItem) {
       formulaInput.value = selectedLogItem.expr;
       updateLivePreview();
-      formulaInput.focus();
       closeModals();
       showToast('式を入力欄にセットしました');
     }
@@ -526,7 +739,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Evaluate value expression if expression is provided
       const res = parser.evaluate(valExpr);
       parser.setVariable(name, res.result);
       renderVariableChips();
@@ -544,7 +756,6 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedLogItem = null;
   };
 
-  // Close modals on overlay background click
   [addVarModal, historyActionModal].forEach(modal => {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModals();
@@ -554,7 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   // Header Actions
   // --------------------------------------------------------------------------
-  // Toggle keypad
   toggleKeypadBtn.addEventListener('click', () => {
     haptic();
     keypadSection.classList.toggle('collapsed');
@@ -562,12 +772,12 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleKeypadBtn.style.opacity = isCollapsed ? '0.4' : '1';
   });
 
-  // Clear history
   clearHistoryBtn.addEventListener('click', () => {
     haptic();
-    if (historyLogs.length === 0) return;
-    if (confirm('計算履歴をすべて消去しますか？')) {
-      historyLogs = [];
+    const active = getActiveSession();
+    if (!active || active.historyLogs.length === 0) return;
+    if (confirm(`タブ "${active.name}" の履歴をすべて消去しますか？`)) {
+      active.historyLogs = [];
       saveData();
       renderHistory();
       showToast('履歴を消去しました');
@@ -578,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialization
   // --------------------------------------------------------------------------
   loadSavedData();
+  renderTabs();
   renderVariableChips();
   renderHistory();
-  formulaInput.focus();
 });

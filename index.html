@@ -15,23 +15,35 @@
     <!-- Top Header -->
     <header class="app-header">
       <div class="brand-group">
-        <div class="app-logo-badge">&gt;_</div>
         <h1 class="app-title">MonoPrompt</h1>
       </div>
       <div class="header-actions">
-        <button id="toggleKeypadBtn" class="icon-btn" title="キーパッド表示切替" aria-label="Toggle Keypad">
+        <button id="toggleKeyboardModeBtn" class="icon-btn" title="スマホキーボード表示切替" aria-label="Toggle OS Keyboard">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="4" width="20" height="16" rx="3"></rect>
             <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"></path>
           </svg>
         </button>
-        <button id="clearHistoryBtn" class="icon-btn" title="履歴を全削除" aria-label="Clear History">
+        <button id="toggleKeypadBtn" class="icon-btn" title="電卓キーパッド表示切替" aria-label="Toggle Keypad">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <button id="clearHistoryBtn" class="icon-btn" title="現タブの履歴を消去" aria-label="Clear History">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"></path>
           </svg>
         </button>
       </div>
     </header>
+
+    <!-- Session Tabs Bar -->
+    <section class="session-tabs-bar" id="sessionTabsBar">
+      <div class="tabs-scroll-container" id="tabsContainer">
+        <!-- Dynamic Session Tabs will be rendered here -->
+      </div>
+      <button class="add-tab-btn" id="addTabBtn" title="新しいタブを追加">+</button>
+    </section>
 
     <!-- Variables Bar -->
     <section class="variables-bar" id="variablesBar">
@@ -43,13 +55,7 @@
 
     <!-- History Log Area -->
     <main class="log-area" id="logArea">
-      <div class="log-empty-state" id="logEmptyState">
-        <p><strong>MonoPrompt へようこそ</strong></p>
-        <p>式を直接入力するかキーパッドで計算できます。<br>
-        例: <code>1122*(4.75+4570)+2500+2500</code><br>
-        変数定義: <code>tax = 0.1</code><br>
-        過去のログをタップして即再利用できます。</p>
-      </div>
+      <!-- Clean without welcome message -->
     </main>
 
     <!-- Input & Real-time Preview Bar -->
@@ -65,6 +71,7 @@
           autocorrect="off" 
           autocapitalize="off" 
           spellcheck="false"
+          inputmode="none"
         >
       </div>
       <div class="preview-row" id="previewRow">
