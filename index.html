@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d0e11">
+  <title>MonoPrompt - Terminal Calculator</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand-group">
+        <div class="app-logo-badge">&gt;_</div>
+        <h1 class="app-title">MonoPrompt</h1>
+      </div>
+      <div class="header-actions">
+        <button id="toggleKeypadBtn" class="icon-btn" title="キーパッド表示切替" aria-label="Toggle Keypad">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"></path>
+          </svg>
+        </button>
+        <button id="clearHistoryBtn" class="icon-btn" title="履歴を全削除" aria-label="Clear History">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Variables Bar -->
+    <section class="variables-bar" id="variablesBar">
+      <button class="add-var-btn" id="openAddVarBtn">+ 変数</button>
+      <div id="varChipsContainer" style="display: flex; gap: 8px;">
+        <!-- Dynamic Variable Chips will appear here -->
+      </div>
+    </section>
+
+    <!-- History Log Area -->
+    <main class="log-area" id="logArea">
+      <div class="log-empty-state" id="logEmptyState">
+        <p><strong>MonoPrompt へようこそ</strong></p>
+        <p>式を直接入力するかキーパッドで計算できます。<br>
+        例: <code>1122*(4.75+4570)+2500+2500</code><br>
+        変数定義: <code>tax = 0.1</code><br>
+        過去のログをタップして即再利用できます。</p>
+      </div>
+    </main>
+
+    <!-- Input & Real-time Preview Bar -->
+    <section class="input-section">
+      <div class="prompt-row">
+        <span class="prompt-prefix">&gt;</span>
+        <input 
+          type="text" 
+          id="formulaInput" 
+          class="formula-input" 
+          placeholder="数式または変数 (例: 100 * (1 + tax))" 
+          autocomplete="off" 
+          autocorrect="off" 
+          autocapitalize="off" 
+          spellcheck="false"
+        >
+      </div>
+      <div class="preview-row" id="previewRow">
+        <span id="previewText"></span>
+      </div>
+    </section>
+
+    <!-- Material 3 Expressive Keypad -->
+    <section class="keypad-section" id="keypadSection">
+      <div class="keypad-grid">
+        <!-- Row 1: Memory & Clear -->
+        <button class="key-btn btn-func" data-action="mc">MC</button>
+        <button class="key-btn btn-func" data-action="mr">MR</button>
+        <button class="key-btn btn-func" data-action="m-plus">M+</button>
+        <button class="key-btn btn-func" data-action="m-minus">M−</button>
+        <button class="key-btn btn-func" data-action="clear">C</button>
+
+        <!-- Row 2: Brackets, Percent, Divide, Backspace -->
+        <button class="key-btn btn-func" data-insert="(">(</button>
+        <button class="key-btn btn-func" data-insert=")">)</button>
+        <button class="key-btn btn-func" data-insert="%">%</button>
+        <button class="key-btn btn-op" data-insert="/">÷</button>
+        <button class="key-btn btn-func" data-action="backspace">⌫</button>
+
+        <!-- Row 3: 7 8 9 Multiply ans -->
+        <button class="key-btn btn-num" data-insert="7">7</button>
+        <button class="key-btn btn-num" data-insert="8">8</button>
+        <button class="key-btn btn-num" data-insert="9">9</button>
+        <button class="key-btn btn-op" data-insert="*">×</button>
+        <button class="key-btn btn-func" data-insert="ans">ans</button>
+
+        <!-- Row 4: 4 5 6 Subtract Power -->
+        <button class="key-btn btn-num" data-insert="4">4</button>
+        <button class="key-btn btn-num" data-insert="5">5</button>
+        <button class="key-btn btn-num" data-insert="6">6</button>
+        <button class="key-btn btn-op" data-insert="-">−</button>
+        <button class="key-btn btn-func" data-insert="^">xʸ</button>
+
+        <!-- Row 5: 1 2 3 Add Prev History -->
+        <button class="key-btn btn-num" data-insert="1">1</button>
+        <button class="key-btn btn-num" data-insert="2">2</button>
+        <button class="key-btn btn-num" data-insert="3">3</button>
+        <button class="key-btn btn-op" data-insert="+">+</button>
+        <button class="key-btn btn-func" data-action="history-up" title="直前の履歴">▲</button>
+
+        <!-- Row 6: 0 . 00 Equals (Enter) -->
+        <button class="key-btn btn-num" data-insert="0">0</button>
+        <button class="key-btn btn-num" data-insert=".">.</button>
+        <button class="key-btn btn-num" data-insert="00">00</button>
+        <button class="key-btn btn-enter" id="evalBtn" data-action="evaluate" style="grid-column: span 2;">=</button>
+      </div>
+    </section>
+
+    <!-- Modal: Add Variable -->
+    <div class="modal-overlay" id="addVarModal">
+      <div class="modal-card">
+        <h2 class="modal-title">新しい変数を登録</h2>
+        <div class="modal-field">
+          <label class="modal-label" for="varNameInput">変数名（英数字）</label>
+          <input type="text" id="varNameInput" class="modal-input" placeholder="例: tax, price, discount">
+        </div>
+        <div class="modal-field">
+          <label class="modal-label" for="varValueInput">値（数値または式）</label>
+          <input type="text" id="varValueInput" class="modal-input" placeholder="例: 0.1, 2980">
+        </div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-cancel" id="cancelVarBtn">キャンセル</button>
+          <button class="modal-btn modal-btn-save" id="saveVarBtn">登録</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal / Action Sheet: History Item Options -->
+    <div class="modal-overlay" id="historyActionModal">
+      <div class="modal-card">
+        <h2 class="modal-title" id="actionModalExpr">計算ログ</h2>
+        <div class="action-sheet-menu">
+          <button class="action-menu-btn" id="actionReuseExpr">
+            <span>式を入力欄にセット</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 00-4-4H4"></path></svg>
+          </button>
+          <button class="action-menu-btn" id="actionInsertResult">
+            <span>結果を入力欄に挿入</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
+          <button class="action-menu-btn" id="actionCopyResult">
+            <span>結果をコピー</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>
+          </button>
+          <button class="action-menu-btn" id="actionCloseModal" style="margin-top: 8px; justify-content: center; color: var(--text-muted);">
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-notice" id="toastNotice">コピーしました</div>
+  </div>
+
+  <script src="parser.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
