@@ -1,7 +1,11 @@
 /**
- * MonoPrompt - Application Controller
- * Supports multi-session tabs, safe touch keypad handling (no unwanted mobile keyboard),
- * AST parsing, LocalStorage persistence, and haptic feedback.
+ * MonoPrompt / Calculator - Application Controller
+ * Supports:
+ * - Multi-session tabs
+ * - Reactive variable chaining (taxA=1.1 -> taxB=taxA -> taxA=1.08 cascades to taxB)
+ * - Safe touch keypad handling (no unwanted mobile OS keyboard)
+ * - Smart smart-parentheses auto-pairing at end-of-line
+ * - Clean minimal UI without legacy memory keys
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const actionCloseModal = document.getElementById('actionCloseModal');
 
   // --------------------------------------------------------------------------
-  // Multi-Session State
+  // State
   // --------------------------------------------------------------------------
   let sessions = [];
   let activeSessionId = '';
@@ -68,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
   };
 
-  // Helper: get current active session object
   const getActiveSession = () => {
     return sessions.find(s => s.id === activeSessionId) || sessions[0];
   };
@@ -76,14 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   // LocalStorage Persistence
   // --------------------------------------------------------------------------
-  const STORAGE_KEY_V2 = 'monoprompt_sessions_v2';
-  const STORAGE_KEY_V1 = 'monoprompt_data_v1';
+  const STORAGE_KEY = 'monoprompt_sessions_v3';
 
   const loadSavedData = () => {
     try {
-      const v2Data = localStorage.getItem(STORAGE_KEY_V2);
-      if (v2Data) {
-        const parsed = JSON.parse(v2Data);
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
         if (Array.isArray(parsed.sessions) && parsed.sessions.length > 0) {
           sessions = parsed.sessions;
           activeSessionId = parsed.activeSessionId || sessions[0].id;
@@ -91,32 +93,15 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
       }
-
-      // Migration from v1
-      const v1Data = localStorage.getItem(STORAGE_KEY_V1);
-      if (v1Data) {
-        const parsed = JSON.parse(v1Data);
-        const migratedSession = {
-          id: 'session_' + Date.now(),
-          name: 'Calc 1',
-          variables: parsed.variables || { ans: 0, M: 0 },
-          historyLogs: parsed.historyLogs || []
-        };
-        sessions = [migratedSession];
-        activeSessionId = migratedSession.id;
-        syncParserWithActiveSession();
-        saveData();
-        return;
-      }
     } catch (e) {
       console.warn('Failed to load session data:', e);
     }
 
-    // Default initialization
+    // Default session
     const defaultSession = {
       id: 'session_' + Date.now(),
       name: 'Calc 1',
-      variables: { ans: 0, M: 0 },
+      variables: {},
       historyLogs: []
     };
     sessions = [defaultSession];
@@ -126,10 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const saveData = () => {
     try {
-      // Sync active session before saving
       const active = getActiveSession();
       if (active) {
-        active.variables = { ...parser.variables };
+        active.variables = JSON.parse(JSON.stringify(parser.variables));
       }
 
       const payload = {
@@ -141,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
           historyLogs: s.historyLogs.slice(-50)
         }))
       };
-      localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(payload));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (e) {
       console.warn('Failed to save session data:', e);
     }
@@ -151,8 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const active = getActiveSession();
     parser = new MathParser();
     if (active && active.variables) {
-      Object.entries(active.variables).forEach(([k, v]) => {
-        parser.setVariable(k, v);
+      // Restore variables
+      Object.entries(active.variables).forEach(([k, data]) => {
+        if (data && typeof data === 'object' && 'expr' in data) {
+          parser.setVariable(k, data.expr);
+        } else if (typeof data === 'number') {
+          parser.setVariable(k, String(data));
+        }
       });
     }
   };
@@ -174,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ${sessions.length > 1 ? '<span class="tab-close-btn" title="タブを閉じる">&times;</span>' : ''}
       `;
 
-      // Switch tab
       tabEl.addEventListener('click', (e) => {
         if (e.target.classList.contains('tab-close-btn')) {
           e.stopPropagation();
@@ -184,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      // Double-click or long-press to rename
       tabEl.addEventListener('dblclick', (e) => {
         e.stopPropagation();
         renameSession(sess.id);
@@ -193,7 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
       tabsContainer.appendChild(tabEl);
     });
 
-    // Auto-scroll active tab into view
     const activeEl = tabsContainer.querySelector('.session-tab.active');
     if (activeEl) {
       activeEl.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
@@ -204,10 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sessionId === activeSessionId) return;
     haptic();
 
-    // Save current active session vars
     const current = getActiveSession();
     if (current) {
-      current.variables = { ...parser.variables };
+      current.variables = JSON.parse(JSON.stringify(parser.variables));
     }
 
     activeSessionId = sessionId;
@@ -227,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newSession = {
       id: 'session_' + Date.now(),
       name: `Calc ${sessions.length + 1}`,
-      variables: { ans: 0, M: 0 },
+      variables: {},
       historyLogs: []
     };
     sessions.push(newSession);
@@ -277,40 +262,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // Variable Chips Rendering
+  // Variable Chips Rendering (No memory hardcoding, shows reactive value)
   // --------------------------------------------------------------------------
   const renderVariableChips = () => {
     varChipsContainer.innerHTML = '';
+    const vars = parser.getVariablesList();
 
-    // Render Memory chip first
-    const memVal = parser.variables.M || 0;
-    const memChip = document.createElement('div');
-    memChip.className = 'var-chip memory-chip';
-    memChip.title = 'タップで現在の式にMを挿入';
-    memChip.innerHTML = `
-      <span class="var-name">M:</span>
-      <span class="var-val">${MathParser.formatNumber(memVal)}</span>
-      <span class="var-del-btn" title="メモリをクリア (MC)">&times;</span>
-    `;
-    memChip.addEventListener('click', (e) => {
-      if (e.target.classList.contains('var-del-btn')) {
-        e.stopPropagation();
-        parser.setVariable('M', 0);
-        saveData();
-        renderVariableChips();
-        showToast('メモリをクリアしました');
-      } else {
-        insertTextAtCursor('M');
-      }
-    });
-    varChipsContainer.appendChild(memChip);
-
-    // Render other user variables
-    const vars = parser.getVariablesList().filter(v => v.name !== 'M');
-    vars.forEach(({ name, value }) => {
+    vars.forEach(({ name, expr, value }) => {
       const chip = document.createElement('div');
       chip.className = 'var-chip';
-      chip.title = `タップで "${name}" を式に挿入`;
+      chip.title = `式: ${expr} (タップで式に挿入)`;
       chip.innerHTML = `
         <span class="var-name">${escapeHtml(name)}:</span>
         <span class="var-val">${MathParser.formatNumber(value)}</span>
@@ -347,7 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const active = getActiveSession();
     const historyLogs = active ? active.historyLogs : [];
 
-    // Clear existing cards
     logArea.innerHTML = '';
 
     historyLogs.forEach((item, index) => {
@@ -379,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
       logArea.appendChild(card);
     });
 
-    // Scroll to bottom
     logArea.scrollTop = logArea.scrollHeight;
   };
 
@@ -407,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLivePreview();
   });
 
-  // Insert text at current cursor position without triggering virtual keyboard
+  // Insert text at current cursor position
   const insertTextAtCursor = (text) => {
     haptic();
     const start = formulaInput.selectionStart ?? formulaInput.value.length;
@@ -417,14 +376,36 @@ document.addEventListener('DOMContentLoaded', () => {
     formulaInput.value = current.substring(0, start) + text + current.substring(end);
     const newPos = start + text.length;
 
-    // Set cursor position
     formulaInput.setSelectionRange(newPos, newPos);
 
-    // If OS keyboard is enabled, keep focus. Otherwise just maintain caret without popping keyboard
     if (isOSKeyboardEnabled) {
       formulaInput.focus();
     }
+    updateLivePreview();
+  };
 
+  // Smart Parentheses Handling:
+  // If at the end of the line, insert "()" and move cursor inside.
+  // If in the middle, just insert "(" without closing paren.
+  const handleOpenParen = () => {
+    haptic();
+    const start = formulaInput.selectionStart ?? formulaInput.value.length;
+    const end = formulaInput.selectionEnd ?? formulaInput.value.length;
+    const current = formulaInput.value;
+
+    // Only auto-pair "()" when cursor is at the very end of input and nothing is selected
+    if (start === end && start === current.length) {
+      formulaInput.value = current + '()';
+      const newPos = start + 1;
+      formulaInput.setSelectionRange(newPos, newPos);
+    } else {
+      insertTextAtCursor('(');
+      return;
+    }
+
+    if (isOSKeyboardEnabled) {
+      formulaInput.focus();
+    }
     updateLivePreview();
   };
 
@@ -476,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formulaInput.value = '';
       updateLivePreview();
       renderHistory();
-      renderVariableChips();
+      renderVariableChips(); // Reflect reactive cascades
       saveData();
       historyNavIndex = -1;
     } catch (err) {
@@ -491,55 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
       renderHistory();
       saveData();
     }
-  };
-
-  // --------------------------------------------------------------------------
-  // Memory Operations (M+, M-, MR, MC)
-  // --------------------------------------------------------------------------
-  const handleMemoryOp = (action) => {
-    haptic();
-    const currentM = parser.variables.M || 0;
-
-    switch (action) {
-      case 'mc':
-        parser.setVariable('M', 0);
-        showToast('MC: メモリを 0 にしました');
-        break;
-
-      case 'mr':
-        insertTextAtCursor(String(currentM));
-        showToast(`MR: ${MathParser.formatNumber(currentM)} を呼び出しました`);
-        break;
-
-      case 'm-plus':
-      case 'm-minus': {
-        const inputVal = formulaInput.value.trim();
-        let valueToAdd = 0;
-
-        if (inputVal) {
-          try {
-            const evalRes = parser.evaluate(inputVal);
-            valueToAdd = evalRes.result;
-          } catch {
-            showToast('式が正しくありません');
-            return;
-          }
-        } else {
-          valueToAdd = parser.variables.ans || 0;
-        }
-
-        const newM = action === 'm-plus' 
-          ? parser.cleanFloat(currentM + valueToAdd)
-          : parser.cleanFloat(currentM - valueToAdd);
-
-        parser.setVariable('M', newM);
-        showToast(`${action === 'm-plus' ? 'M+' : 'M−'}: M = ${MathParser.formatNumber(newM)}`);
-        break;
-      }
-    }
-
-    renderVariableChips();
-    saveData();
   };
 
   // --------------------------------------------------------------------------
@@ -579,14 +511,13 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // --------------------------------------------------------------------------
-  // Keypad Touch/Click Routing (Prevent Unwanted OS Keyboard)
+  // Keypad Touch/Click Routing
   // --------------------------------------------------------------------------
-  // CRITICAL: Use pointerdown with preventDefault to completely stop mobile browser from popping software keyboard
   keypadSection.addEventListener('pointerdown', (e) => {
     const btn = e.target.closest('.key-btn');
     if (!btn) return;
     if (!isOSKeyboardEnabled) {
-      e.preventDefault(); // Prevents input focus stealing / OS keyboard trigger
+      e.preventDefault(); // Prevents input focus stealing / OS keyboard popup
     }
   });
 
@@ -609,17 +540,17 @@ document.addEventListener('DOMContentLoaded', () => {
           formulaInput.value = '';
           updateLivePreview();
           break;
+        case 'open-paren':
+          handleOpenParen();
+          break;
         case 'backspace':
           performBackspace();
           break;
         case 'history-up':
           navigateHistory('up');
           break;
-        case 'mc':
-        case 'mr':
-        case 'm-plus':
-        case 'm-minus':
-          handleMemoryOp(actionVal);
+        case 'history-down':
+          navigateHistory('down');
           break;
       }
     }
@@ -641,13 +572,29 @@ document.addEventListener('DOMContentLoaded', () => {
       formulaInput.setAttribute('inputmode', 'none');
       toggleKeyboardModeBtn.classList.remove('active');
       formulaInput.blur();
-      showToast('ソフトウェアキーボード: OFF (電卓専用モード)');
+      showToast('ソフトウェアキーボード: OFF');
     }
   });
 
   // --------------------------------------------------------------------------
   // Keyboard Events (PC physical keyboard)
   // --------------------------------------------------------------------------
+  formulaInput.addEventListener('keydown', (e) => {
+    // Intercept "(" on physical keyboard for end-of-line auto-pairing
+    if (e.key === '(') {
+      const start = formulaInput.selectionStart ?? formulaInput.value.length;
+      const end = formulaInput.selectionEnd ?? formulaInput.value.length;
+      const current = formulaInput.value;
+      if (start === end && start === current.length) {
+        e.preventDefault();
+        formulaInput.value = current + '()';
+        const newPos = start + 1;
+        formulaInput.setSelectionRange(newPos, newPos);
+        updateLivePreview();
+      }
+    }
+  });
+
   window.addEventListener('keydown', (e) => {
     if (addVarModal.classList.contains('open') || historyActionModal.classList.contains('open')) {
       if (e.key === 'Escape') closeModals();
@@ -739,14 +686,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const res = parser.evaluate(valExpr);
-      parser.setVariable(name, res.result);
+      parser.setVariable(name, valExpr);
       renderVariableChips();
       saveData();
       closeModals();
-      showToast(`変数 "${name} = ${res.result}" を登録しました`);
+      showToast(`変数 "${name} = ${valExpr}" を登録しました`);
     } catch (err) {
-      alert(`値のエラー: ${err.message}`);
+      alert(`エラー: ${err.message}`);
     }
   });
 

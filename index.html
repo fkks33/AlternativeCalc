@@ -82,46 +82,40 @@
     <!-- Material 3 Expressive Keypad -->
     <section class="keypad-section" id="keypadSection">
       <div class="keypad-grid">
-        <!-- Row 1: Memory & Clear -->
-        <button class="key-btn btn-func" data-action="mc">MC</button>
-        <button class="key-btn btn-func" data-action="mr">MR</button>
-        <button class="key-btn btn-func" data-action="m-plus">M+</button>
-        <button class="key-btn btn-func" data-action="m-minus">M−</button>
+        <!-- Row 1: Clear, Parens, Percent, Divide -->
         <button class="key-btn btn-func" data-action="clear">C</button>
-
-        <!-- Row 2: Brackets, Percent, Divide, Backspace -->
-        <button class="key-btn btn-func" data-insert="(">(</button>
+        <button class="key-btn btn-func" data-action="open-paren">(</button>
         <button class="key-btn btn-func" data-insert=")">)</button>
         <button class="key-btn btn-func" data-insert="%">%</button>
         <button class="key-btn btn-op" data-insert="/">÷</button>
-        <button class="key-btn btn-func" data-action="backspace">⌫</button>
 
-        <!-- Row 3: 7 8 9 Multiply ans -->
+        <!-- Row 2: 7 8 9 Power Multiply -->
         <button class="key-btn btn-num" data-insert="7">7</button>
         <button class="key-btn btn-num" data-insert="8">8</button>
         <button class="key-btn btn-num" data-insert="9">9</button>
+        <button class="key-btn btn-func" data-insert="^">xʸ</button>
         <button class="key-btn btn-op" data-insert="*">×</button>
-        <button class="key-btn btn-func" data-insert="ans">ans</button>
 
-        <!-- Row 4: 4 5 6 Subtract Power -->
+        <!-- Row 3: 4 5 6 Backspace Subtract -->
         <button class="key-btn btn-num" data-insert="4">4</button>
         <button class="key-btn btn-num" data-insert="5">5</button>
         <button class="key-btn btn-num" data-insert="6">6</button>
+        <button class="key-btn btn-func" data-action="backspace">⌫</button>
         <button class="key-btn btn-op" data-insert="-">−</button>
-        <button class="key-btn btn-func" data-insert="^">xʸ</button>
 
-        <!-- Row 5: 1 2 3 Add Prev History -->
+        <!-- Row 4: 1 2 3 History-Up Add -->
         <button class="key-btn btn-num" data-insert="1">1</button>
         <button class="key-btn btn-num" data-insert="2">2</button>
         <button class="key-btn btn-num" data-insert="3">3</button>
+        <button class="key-btn btn-func" data-action="history-up" title="過去の式">▲</button>
         <button class="key-btn btn-op" data-insert="+">+</button>
-        <button class="key-btn btn-func" data-action="history-up" title="直前の履歴">▲</button>
 
-        <!-- Row 6: 0 . 00 Equals (Enter) -->
+        <!-- Row 5: 0 . 00 History-Down Equals -->
         <button class="key-btn btn-num" data-insert="0">0</button>
         <button class="key-btn btn-num" data-insert=".">.</button>
         <button class="key-btn btn-num" data-insert="00">00</button>
-        <button class="key-btn btn-enter" id="evalBtn" data-action="evaluate" style="grid-column: span 2;">=</button>
+        <button class="key-btn btn-func" data-action="history-down" title="次の式">▼</button>
+        <button class="key-btn btn-enter" id="evalBtn" data-action="evaluate">=</button>
       </div>
     </section>
 
