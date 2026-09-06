@@ -19,9 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const logArea = document.getElementById('logArea');
   const varChipsContainer = document.getElementById('varChipsContainer');
   const keypadSection = document.getElementById('keypadSection');
-  const toggleKeypadBtn = document.getElementById('toggleKeypadBtn');
   const toggleKeyboardModeBtn = document.getElementById('toggleKeyboardModeBtn');
-  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
   const exportCsvBtn = document.getElementById('exportCsvBtn');
   const openHelpBtn = document.getElementById('openHelpBtn');
   const toastNotice = document.getElementById('toastNotice');
@@ -831,25 +829,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   // Header Actions
   // --------------------------------------------------------------------------
-  toggleKeypadBtn.addEventListener('click', () => {
-    haptic();
-    keypadSection.classList.toggle('collapsed');
-    const isCollapsed = keypadSection.classList.contains('collapsed');
-    toggleKeypadBtn.style.opacity = isCollapsed ? '0.4' : '1';
-  });
-
-  clearHistoryBtn.addEventListener('click', () => {
-    haptic();
-    const active = getActiveSession();
-    if (!active || active.historyLogs.length === 0) return;
-    if (confirm(`タブ "${active.name}" の履歴をすべて消去しますか？`)) {
-      active.historyLogs = [];
-      saveData();
-      renderHistory();
-      showToast('履歴を消去しました');
-    }
-  });
-
   exportCsvBtn.addEventListener('click', () => {
     haptic();
     const active = getActiveSession();
